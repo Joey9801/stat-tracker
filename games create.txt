@@ -1,0 +1,16 @@
+CREATE TYPE team AS ENUM ('red', 'blue');
+
+CREATE TABLE games_players (
+    game_id integer,
+    player_id integer,
+    team team
+);
+
+CREATE TABLE games (
+    id serial PRIMARY KEY NOT NULL,
+    red_score integer NOT NULL,
+    blue_score integer NOT NULL,
+    timestamp timestamp WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CHECK (red_score >= 0 AND red_score <= 10),
+    CHECK (blue_score >= 0 AND blue_score <= 10)
+);

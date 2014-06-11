@@ -1,0 +1,171 @@
+<html>
+  <head>
+    <title>New Game</title>
+    <link rel="stylesheet" href="/static/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/css/stat_tracker.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
+  </head>
+  
+  <body>
+    <div id="disabler" class="">
+    </div>
+    <div class="container">
+
+      <div class="row">
+        <div class="col-md-4 col-md-offset-4">
+        
+          <div class="row back-btn">
+            <span class="glyphicon glyphicon-home"></span>
+          </div>
+          
+          {% for player in playerlist %}
+            <div class="row selector-container">
+              <div class="selector select-left red">
+              </div>
+              <div class="selector select-right blue">
+              </div>
+              
+              <div id={{ player.id }} class="select-name">
+                {{ player.nickname }}
+              </div>
+              
+            </div>
+          {% endfor %}
+          
+          <br>
+          
+          
+          <div class="row select-score">
+            <div id="red-score" class="score score-left">
+            0
+            </div>
+            <div id="blue-score" class="score score-right">
+            0
+            </div>
+            <div style="position:relative; top:-10px; z-index:-1">
+            :
+            </div>
+
+          </div>
+
+          <div class="row submit">
+            Submit
+            <br>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </body>
+  
+  <script src="/static/js/jquery-2.1.1.min.js"></script>
+
+  <script>
+
+    var reds = new Array(); //list of red players
+    var blues = new Array();
+    
+    var red_score = 0;
+    var blue_score = 0;
+    
+    function update_players() {
+      reds = new Array();
+      blues = new Array();
+      $('.select-name').each( function(thing) {
+        if ( $(this).hasClass( "red" ) )
+          reds.push( Number($(this).attr('id')) );
+        if ( $(this).hasClass( "blue" ) )
+            blues.push( Number($(this).attr('id')) );
+      });
+    }
+
+    $('.back-btn').click( function () {
+      window.location.href = '/';
+    });
+    
+    $(".selector").click(function() {
+      var item = $(this).siblings( '.select-name' );
+      var clicked, current;
+      
+      if ( $(this).hasClass( "red" ))
+        clicked = "red";
+      else
+        clicked = "blue";
+        
+      if ( item.hasClass( "red" ) )
+        current = "red";
+      else if( item.hasClass( "blue" ) )
+        current = "blue";
+      else
+        current = "none";
+      
+      if(current == clicked){
+        item.removeClass(current);
+        update_players();
+        return;
+      }
+      
+      if (clicked=="red" && reds.length<4){
+        item.addClass("red");
+        item.removeClass('blue');
+      }
+      if (clicked=="blue" && blues.length<4){
+        item.addClass("blue");
+        item.removeClass('red');
+      } 
+      update_players();
+    });
+    
+    $(".score").click(function() {
+      var num = Number($(this).text().trim());
+      num = num+1;
+      if (num==11)
+        num=0;
+      $(this).text(num);
+      red_score = Number($('#red-score').text())
+      blue_score = Number($('#blue-score').text())
+    });
+    
+    $('.submit').click( function() {
+      console.log("submitting data");
+      console.log("reds = ", reds);
+      console.log("blues = ", blues);
+      console.log("red_score = ", red_score);
+      console.log("blue_score = ", blue_score);
+      //verify valid game TODO
+      
+      $('#disabler').fadeIn(500);
+      
+      var payload = {"reds[]": reds,
+                     "blues[]": blues,
+                     "red_score": red_score,
+                     "blue_score": blue_score};
+      
+      $(window).delay(1000).queue(function() {
+        var posting = $.post( "/new_game", payload);
+        
+        posting.done(function( data ) { 
+          $('#disabler').fadeOut(500);
+          console.log(data);
+          window.location.href = data.redirect
+        });
+        
+        posting.error(function( data, status, error ) {
+          console.log(error);
+          if(error=="timeout"){
+            alert("The server isn't responding.\n"
+                   +"Check your internet connection and try again");
+          }
+          else{
+            alert("Oops, something wasn't right:\n- " +
+            data.responseJSON.reasons.join('\n- ')
+            + "\n" );
+            $('#disabler').delay(300).fadeOut(500);
+          }
+        });
+      })
+
+    });
+  </script>
+</html>
