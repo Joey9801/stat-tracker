@@ -1,0 +1,45 @@
+{% extends "content-page.html" %}
+
+{% block title %}{{ player.nickname }}{% endblock %}
+
+{% block content %}
+<div class="row player player-header">
+  <div class="player-name">
+    {{ player.nickname }}
+  </div>
+  <div class="player-photo">
+    <img src="/static/img/{{player.id}}.jpg" width="180px">
+  </div>
+</div>
+
+<table class="table table-striped player-table">
+  <tr>
+    <th>Rank</th>
+    <td>#{{ player.rank }}</td>
+  </tr>
+  <tr>
+    <th>Score</th>
+    <td>{{ player.score }}</td>
+  </tr>
+  <tr>
+    <th>Games played</th>
+    <td>{{ player.games_total }}</td>
+  </tr>
+  <tr>
+    <th>Games won</th>
+    <td>{{ player.games_won }}</td>
+  </tr>
+  <tr>
+    <th>Win percentage</th>
+    <td>{{ player.win_percentage|round(1)}}%</td>
+  </tr>
+  <tr>
+    <th>Goals scored</th>
+    <td>{{ player.goals_scored }}</td>
+  </tr>
+  <tr>
+    <th>Goals conceded</th>
+    <td>{{ player.goals_conceded }}</td>
+  </tr>
+</table>
+{% endblock %}

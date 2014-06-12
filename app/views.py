@@ -1,6 +1,8 @@
 from flask import render_template, request, redirect, session, jsonify, url_for, abort
 from app import app
 import psycopg2, psycopg2.extras
+import elo
+from datetime import datetime, timedelta
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -33,40 +35,43 @@ def new_game():
             red_score = int(request.form.get("red_score"))
             blue_score = int(request.form.get("blue_score"))
             valid, reasons = validate_game(reds, blues, red_score, blue_score)
-        except ValueError:
+        except ValueError, TypeError:
             valid = False
-            reasons = ["ValueError while processing game"]
-            print "caught ValueError"
+            reasons = ["Error while processing game"]
             
         if not valid:
             return jsonify(valid=False, 
                            reasons=reasons), 400
-        
-        print "no errors found with posted data"
-        return jsonify(valid=True,
-                       game_id=16,
-                       redirect=url_for('view_game', game_id=16)), 202
-        query_game = "INSERT INTO games (red_score, blue_score) VALUES (%s, %s) RETURNING id;"
-        query_player = "INSERT INTO games_players (game_id, player_id, team) VALUES (%s, %s, %s);"
+
+        query_game = "INSERT INTO games (red_score, blue_score) VALUES (%s, %s) RETURNING *"
+        query_player = "INSERT INTO games_players (game_id, player_id, team, win) VALUES (%s, %s, %s, %s)"
         
         conn = psycopg2.connect("dbname=foosball")
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         
         cur.execute(query_game, (red_score, blue_score))
-        game_id = cur.fetchone()['id']
+        game = cur.fetchone()
         
         for player in reds:
-            cur.execute(query_player, (game_id, player, 'red'))
+            cur.execute(query_player, (game['id'], player, 'red', red_score>blue_score))
         
         for player in blues:
-            cur.execute(query_player, (game_id, player, 'blue'))
+            cur.execute(query_player, (game['id'], player, 'blue', blue_score>red_score))
         conn.commit()
+        
+        elo.update_score(cur, game=game)
+        conn.commit()
+        
         cur.close()
         conn.close()
         
-        session['last_added'] = game_id
+        if 'added_games' not in session:
+            session['added_games'] = list()
+        session['added_games'].append(game['id'])
         
-        return "", 202
+        return jsonify(valid=True,
+                       game_id=game['id'],
+                       redirect=url_for('view_game', game_id=game['id'])), 202
 
 @app.route('/stats')
 @app.route('/stats/<page>')
@@ -96,7 +101,7 @@ def stats_leaderboard():
     conn = psycopg2.connect("dbname=foosball")
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     
-    cur.execute("SELECT id, nickname FROM players ORDER BY score")
+    cur.execute("SELECT id, nickname FROM players WHERE score !=0 ORDER BY score DESC")
     playerlist = cur.fetchall()
     
     cur.close()
@@ -108,7 +113,7 @@ def stats_recent_games():
     conn = psycopg2.connect("dbname=foosball")
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     
-    cur.execute("SELECT * FROM games ORDER BY timestamp DESC LIMIT 10;")
+    cur.execute("SELECT * FROM games ORDER BY timestamp DESC LIMIT 10")
     games = cur.fetchall()
     
     cur.close()
@@ -117,14 +122,10 @@ def stats_recent_games():
     return render_template('stats/recent_games.html',
                            games = games)
                            
-@app.route('/view_game/<game_id>')
-def view_game(game_id=None):
-    try:
-        game_id = int(game_id)
-    except ValueError:
-        abort(404)
+@app.route('/view_game/<int:game_id>')
+def view_game(game_id):
     
-    name_query = "SELECT players.nickname FROM games_players INNER JOIN players ON players.id=games_players.player_id WHERE game_id=%s AND team=%s;"
+    name_query = "SELECT players.nickname, players.id FROM games_players INNER JOIN players ON players.id=games_players.player_id WHERE game_id=%s AND team=%s"
     
     class game: pass
     
@@ -140,14 +141,112 @@ def view_game(game_id=None):
     game.red_score = line['red_score']
     game.blue_score = line['blue_score']
     game.timestamp = line['timestamp']
-    print game.timestamp
+
     
     cur.execute(name_query, (game_id, 'red'))
-    game.reds = [x['nickname'] for x in cur.fetchall()]
+    game.reds = cur.fetchall()
     cur.execute(name_query, (game_id, 'blue'))
-    game.blues = [x['nickname'] for x in cur.fetchall()]
+    game.blues = cur.fetchall()
     
     return render_template('view_game.html', game=game)
+    
+@app.route('/delete_game/<game_id>')
+def delete_game(game_id):
+    success = True
+    game_id = int(game_id)
+    if 'added_games' not in session:
+        msg = "You haven't added any games"
+        return jsonify(msg=msg), 403
+    elif game_id not in session['added_games']:
+        msg = "You did not add this game"
+        return jsonify(msg=msg), 403
+
+    max_time = timedelta(minutes=10)
+    check_expired = "SELECT (now()-timestamp)<%s AS in_date FROM games WHERE id=%s"
+    
+    delete_game = "DELETE FROM games where id=%s"
+    
+    conn = psycopg2.connect("dbname=foosball")
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute(check_expired, (max_time,game_id))
+    
+    in_date = cur.fetchone()
+    print in_date
+    try:
+        in_date = in_date['in_date']
+    except TypeError:
+        in_date = False
+    
+    if not in_date:
+        cur.close()
+        conn.close()
+        return "Nope, not in_date", 403
+    else:
+        cur.execute(delete_game, (game_id,))
+        conn.commit()
+        cur.close()
+        conn.close()
+        session['added_games'].remove(game_id)
+        return "Deleted that shit", 200
+    
+@app.route('/view_player/<int:player_id>')
+def view_player(player_id=None):
+    #player data
+    query1 = "SELECT * from players WHERE id=%s"
+    
+    #For calculating rank
+    query2 = "SELECT COUNT(*) FROM players " \
+             "WHERE score > (SELECT score FROM players WHERE id=%s) AND score != 0"
+             
+    #Total num of games
+    query3 = "SELECT COUNT(*) FROM games_players WHERE player_id=%s"
+    
+    #Total games won
+    query4 = "SELECT COUNT(*) FROM games_players WHERE player_id=%s AND win"
+    
+    conn = psycopg2.connect("dbname=foosball")
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    
+    cur.execute(query1, (player_id,))
+    player = cur.fetchone()
+    
+    player['score'] = int(player['score']*1000 + 1000)
+    
+    cur.execute(query2, (player_id,))
+    player['rank'] = int(cur.fetchone()['count']) + 1
+    
+    cur.execute(query3, (player_id,))
+    player['games_total'] = total = int(cur.fetchone()['count'])
+    
+    cur.execute(query4, (player_id,))
+    player['games_won'] = won = int(cur.fetchone()['count'])
+    
+    
+    query5 = "SELECT COALESCE(SUM(red_score), 0)  AS red_goals, " \
+             "       COALESCE(SUM(blue_score), 0) AS blue_goals " \
+             "FROM games " \
+             "JOIN games_players ON games_players.game_id = games.id " \
+             "WHERE games_players.player_id = %s " \
+             "AND games_players.team = %s"
+    
+    scored, conceded = 0, 0
+    for team, other_team in (('red', 'blue'), ('blue', 'red')):
+        cur.execute(query5, (player_id, team))
+        r = cur.fetchone()
+        scored += r[team + "_goals"]
+        conceded += r[other_team + "_goals"]
+    
+    player['goals_scored'] = scored
+    player['goals_conceded'] = conceded
+    
+    
+    if won:
+        player['win_percentage'] = float(won)/float(total)*100
+    else:
+        player['win_percentage'] = 0
+    
+    return render_template('view_player.html',
+                           player = player)
         
 def validate_game(reds, blues, red_score, blue_score):
     reasons = list()

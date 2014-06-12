@@ -1,69 +1,43 @@
-<html>
-  <head>
-    <title>Game #{{ game.id }}</title>
-    <link rel="stylesheet" href="/static/css/bootstrap.css">
-    <link rel="stylesheet" href="/static/css/stat_tracker.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
-  </head>
-  
-  <body>
-    <div class="container">
+{% extends "content-page.html" %}
 
-      <div class="row">
-        <div class="col-md-4 col-md-offset-4">
-        
-          <div class="row back-btn">
-            <span class="glyphicon glyphicon-chevron-left"></span>
-          </div>
-          
-          <div class="row display-score">
-            <div id="red-score" class="score score-left">
-            {{ game.red_score }}
-            </div>
-            <div id="blue-score" class="score score-right">
-            {{ game.blue_score }}
-            </div>
-            <div style="position:relative; top:-10px; z-index:-1">
-            :
-            </div>
-          </div>
-          
-          <div class="row team">
-            <div id="red-team" class="team-red">
-              {% for player in game.reds %}
-                {{player}}<br>
-              {%endfor%}
-            </div>
-            <br>
-            <div id="blue-team" class="team-blue">
-              {% for player in game.blues %}
-                {{player}}<br>
-              {%endfor%}
-            </div>
-          </div>
-          
-          <div class="row timeago" title="{{ game.timestamp }}">
-          </div>
-          
-        </div>
-      </div>
+{% block title %}Game #{{ game.id }}{% endblock %}
 
+{% block content %}
+  <div class="row display-score">
+    <div id="red-score" class="score score-left">
+    {{ game.red_score }}
     </div>
-  </body>
+    <div id="blue-score" class="score score-right">
+    {{ game.blue_score }}
+    </div>
+    <div style="position:relative; top:-10px; z-index:-1">
+    :
+    </div>
+  </div>
+
+  <div class="row team">
+    <div id="red-team" class="team-red">
+      {% for player in game.reds %}
+        <div class="player" id={{player.id}}>{{player.nickname}}</div>
+      {%endfor%}
+    </div>
+    <div id="blue-team" class="team-blue">
+      {% for player in game.blues %}
+        <div class="player" id={{player.id}}>{{player.nickname}}</div>
+      {%endfor%}
+    </div>
+  </div>
   
-  <script src="/static/js/jquery-2.1.1.min.js"></script>
-  <script src="/static/js/bootstrap.js"></script>
-  <script src="/static/js/timeago.js"></script>
+  <div class="row timeago" title="{{ game.timestamp }}">
+  </div>
+{% endblock %}
+
+{% block scripts %}
   <script>
-    $('.back-btn').click( function () {
-      var ref = document.referrer.split('/').slice(-1)[0]
-      if(ref=="recent_games")
-        window.location.href = '/stats/recent_games';
-      else
-        window.location.href = '/';
+    $('.player').click( function() {
+      window.location.href = '/view_player/' + this.id;
     });
     
     $('.timeago').timeago();
   </script>
-  
-</html>
+{% endblock %}

@@ -1,66 +1,47 @@
-<html>
-  <head>
-    <title>New Game</title>
-    <link rel="stylesheet" href="/static/css/bootstrap.css">
-    <link rel="stylesheet" href="/static/css/stat_tracker.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
-  </head>
-  
-  <body>
-    <div id="disabler" class="">
-    </div>
-    <div class="container">
+{% extends "content-page.html" %}
+{% block title %}New Game{%endblock %}
 
-      <div class="row">
-        <div class="col-md-4 col-md-offset-4">
+{% block content %}
+  <div id="disabler" class="">
+  </div>
         
-          <div class="row back-btn">
-            <span class="glyphicon glyphicon-home"></span>
-          </div>
-          
-          {% for player in playerlist %}
-            <div class="row selector-container">
-              <div class="selector select-left red">
-              </div>
-              <div class="selector select-right blue">
-              </div>
-              
-              <div id={{ player.id }} class="select-name">
-                {{ player.nickname }}
-              </div>
-              
-            </div>
-          {% endfor %}
-          
-          <br>
-          
-          
-          <div class="row select-score">
-            <div id="red-score" class="score score-left">
-            0
-            </div>
-            <div id="blue-score" class="score score-right">
-            0
-            </div>
-            <div style="position:relative; top:-10px; z-index:-1">
-            :
-            </div>
-
-          </div>
-
-          <div class="row submit">
-            Submit
-            <br>
-          </div>
-
-        </div>
+  {% for player in playerlist %}
+    <div class="row selector-container">
+      <div class="selector select-left red">
       </div>
-
+      <div class="selector select-right blue">
+      </div>
+      
+      <div id={{ player.id }} class="select-name">
+        {{ player.nickname }}
+      </div>
+      
     </div>
-  </body>
-  
-  <script src="/static/js/jquery-2.1.1.min.js"></script>
+  {% endfor %}
 
+  <br>
+
+
+  <div class="row select-score">
+    <div id="red-score" class="score score-left">
+    0
+    </div>
+    <div id="blue-score" class="score score-right">
+    0
+    </div>
+    <div style="position:relative; top:-10px; z-index:-1">
+    :
+    </div>
+
+  </div>
+
+  <div class="row submit">
+    Submit
+    <br>
+  </div>
+{% endblock %}
+
+{% block scripts %}
   <script>
 
     var reds = new Array(); //list of red players
@@ -79,10 +60,6 @@
             blues.push( Number($(this).attr('id')) );
       });
     }
-
-    $('.back-btn').click( function () {
-      window.location.href = '/';
-    });
     
     $(".selector").click(function() {
       var item = $(this).siblings( '.select-name' );
@@ -167,5 +144,9 @@
       })
 
     });
+    
+    $('.select-name').click( function() {
+      window.open('/view_player/' + this.id, '_blank');
+    });
   </script>
-</html>
+{% endblock %}

@@ -1,0 +1,111 @@
+\documentclass{article}
+\usepackage[a4paper,left=2cm,top=2cm]{geometry}
+
+\usepackage{parskip}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+
+\begin{document}
+
+The plan:
+
+It's basically Elo; we're using the Gaussian rather than Logistic version for convenience.
+
+In the Elo system, the ``performance'' of players is modelled as a random variable with mean $s_i$ (their skills) and fixed variance:
+\[
+    X_i \sim N(s_i, \sigma^2)
+    \text{.}
+\]
+
+Then, the probability that player 1 wins is the probability that their performance exceeds that of the other player
+\begin{align*}
+    E_1 &= P(X_1 > X_2) = P \left( \underbrace{ \frac{1}{\sigma} \left( X_1 - X_2 - (s_1 - s_2) \right) }_{\mathclap{\sim N(0, 1)}}
+                        > - \frac{1}{\sigma} (s_1 - s_2) \right)
+         = \varphi\left( \frac{s_2 - s_1}{\sigma} \right) \\
+    E_2 &= P(X_2 > X_1) = \varphi\left( \frac{s_1 - s_2}{\sigma} \right) = 1 - E_1
+    \text{,}
+\end{align*}
+and then (supposing player 1 wins) skills are updated:
+\begin{align*}
+    s_1 &\leftarrow s_1 + k ( 1 - E_A ) \\
+    s_2 &\leftarrow s_2 + k ( \underbrace{0 - E_B}_{\mathclap{\text{actual performance} - \text{expected performance}}} )
+    \text{,}
+\end{align*}
+where $k$ is some magic constant. A draw is treated as $\text{actual performance} = \frac{1}{2}$ and therefore a draw between two equally matched people (so $E_A = \frac{1}{2}$) results in no change in scores.
+
+We need to modify this to handle multiple teams, take into account the margin by which each team won. The key points are that:
+\begin{itemize}
+    \item We can calculate a ``probability of winning something'' from the ``skills''.
+    \item The size of the score update is proportional to the probability of the result not occuring.
+\end{itemize}
+
+The Setup:
+\begin{align*}
+    &\text{Teams } && I, J \text{ (index sets)} \\
+    &\text{Skills } && s_i, s_j \quad (i \in I, j \in J) \\
+    &\text{Player performance } && U_i \sim N(s_i, \sigma^2) \\
+    &                           && V_i \sim N(s_j, \sigma^2) \\
+    &\text{Team performance } && X_I = K_{|I|} \sum_{i \in I} U_i \sim N(K_{|I|} \sum_{i \in I} s_i, |I| K_{|I|}^2 \sigma^2) \\
+    &                         && X_J = K_{|J|} \sum_{i \in J} V_i \sim N(K_{|J|} \sum_{j \in J} s_j, |J| K_{|J|}^2 \sigma^2)
+\end{align*}
+where $K_{\{1,2,3,4\}}$ is a magic constant.
+
+If we set $K_n = \frac{1}{n}$ then we would be saying that a team's performance is the average of the performance of all its members. However, this is probably not a reasonable assumption.
+
+Hypothesis: a two person team is ``twice as good'' as a one person team and it's performance is the sum of the two players' performances. However, a 4 person team is no where near twice as good as a two person team, hence the magic constant K. 
+
+So, the probability that team $I$ wins any point is:
+\[
+    E = P( X_I > X_J ) = P\left( \underbrace{ \frac{1}{\varphi} ( X_I - X_J - \tau ) }_{\sim N(0, 1)}
+                                 > \frac{-\tau}{\varphi} \right)
+                       = \varphi\left( \frac{\tau}{\varphi} \right)
+\]
+where
+\begin{align*}
+    \tau &= K_{|I|} \sum_{i \in I} s_i - K_{|J|} \sum_{j \in J} s_j \\
+    \varphi &= \sqrt{ \sigma^2 ( K_{|I|}^2 |I| + K_{|J|}^2 |J| ) }
+\end{align*}
+
+Suppose now that the actual scores were $a$ and $b$; crucially $a + b$ points were played.
+
+We {\it expected} the scores be binomially distributed: $A\sim\operatorname{Bin}(a + b, E)$; $B = a + b - A$.
+
+Note that the expected scores could be greater than 10. Indeed, if a very good team played a very bad team, yet only won 10-9, while in some sense we could say that we ``expected'' 10-1, it makes more sense to say that we expected 19 goals to 1.
+
+The update will be proportional to $1 - \text{p-value}$, where $p-value$ is the probability of a equally or more significant result occuring. We're using the two-tailed version. This means that if someone does not beat someone by as much as they should, their ratings go down despite them having won. This also means that results that are exactly as expected produce no change in skills.
+\[
+    \Delta = \frac{1}{2} - \sum_{m \in M} {a + b \choose m} E^m (1 - E)^{a + b - m}
+    \text{,}
+\]
+where
+\[
+    M = \begin{cases}
+        \{ a, a + 1, \ldots, a + b \}  &\text{if } a > b \\
+        \{ a, a - 1, \ldots, 0 \}      &\text{if } b > a
+    \end{cases}
+    \text{.}
+\]
+
+The score updates are
+\begin{align*}
+    s_i &\leftarrow s_i + k \Delta && \text{each } i \in I \\
+    s_i &\leftarrow s_i - k \Delta && \text{each } j \in J
+    \text{.}
+\end{align*}
+where $k$ is some magic constant.
+
+
+Oh, and as a bit of fun, we can also "predict" scores:
+
+If $E > \frac{1}{2}$ we predict a score of
+\[
+    10 : 10 \frac{1 - E}{E}
+\]
+and if $E < \frac{1}{2}$
+\[
+    10 \frac{E}{1 - E} : 10
+\]
+that is, multiplying $E : (1 - E)$ up so that the larger one is equal to ten.
+
+\end{document}

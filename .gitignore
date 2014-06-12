@@ -2,3 +2,6 @@
 tracker_env/*
 *.ignore
 *.txt
+*.jpg
+*.jpeg
+*.csv

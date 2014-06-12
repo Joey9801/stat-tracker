@@ -1,56 +1,33 @@
-<html>
-  <head>
-    <title>Stats main</title>
-    <link rel="stylesheet" href="/static/css/bootstrap.css">
-    <link rel="stylesheet" href="/static/css/stat_tracker.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
-  </head>
-  
-  <body>
-    <div class="container">
+{% extends "content-page.html" %}
+{% block title %}Recent Games{% endblock %}
 
-      <div class="row">
-        <div class="col-md-4 col-md-offset-4">
-          <div class="row back-btn">
-            <span class="glyphicon glyphicon-chevron-left"></span>
-          </div>
-          <div class="row title">
-            Recent Games
-          </div>
-          
-          {% for game in games %}
-          <div id="{{ game.id }}" class="row recent-game">
-            <div class="score">
-              {{game.red_score}} : {{ game.blue_score }}
-            </div>
-            {% if game.red_score > game.blue_score %}
-            <div class="statement red">
-              To Red
-            </div>
-            {% else %}
-            <div class="statement blue">
-              To Blue
-            </div>
-            {% endif %}
-            <div class="timeago" title="{{ game.timestamp }}">
-            </div>
-          </div>
-          {%endfor%}
-          
-        </div>
-      </div>
+{% block content %}
+  <div class="row title">
+    Recent Games
+  </div>
 
+  {% for game in games %}
+  <div id="{{ game.id }}" class="row recent-game">
+    <div class="score">
+      {{game.red_score}} : {{ game.blue_score }}
     </div>
-  </body>
-  
-  <script src="/static/js/jquery-2.1.1.min.js"></script>
-  <script src="/static/js/bootstrap.js"></script>
-  <script src="/static/js/timeago.js"></script>
-  <script>
-    $('.back-btn').click( function () {
-      window.location.href = '/stats/index';
-    });
-    
+    {% if game.red_score > game.blue_score %}
+    <div class="statement red">
+      To Red
+    </div>
+    {% else %}
+    <div class="statement blue">
+      To Blue
+    </div>
+    {% endif %}
+    <div class="timeago" title="{{ game.timestamp }}">
+    </div>
+  </div>
+  {%endfor%}
+{% endblock %}
+
+{% block scripts %}
+  <script>   
     $('.recent-game').click( function () {
       var new_page = '/view_game/' + $(this).attr('id');
       console.log(new_page + ' clicked');
@@ -59,5 +36,4 @@
     
     $('.timeago').timeago();
   </script>
-  
-</html>
+{% endblock %}
