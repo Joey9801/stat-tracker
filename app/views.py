@@ -8,6 +8,9 @@ from raven.flask_glue import AuthDecorator
 auth_decorator = AuthDecorator(desc="Selwyn foosball tracker")
 app.before_request(auth_decorator.before_request)
 
+#crsids authed for adding a new game
+authed_crsids = ['jr592', 'djr61']
+
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404
@@ -20,7 +23,7 @@ def index():
 def new_game():
     if request.method == 'GET':
     
-        conn = psycopg2.connect("dbname=foosball")
+        conn = psycopg2.connect("dbname=foosball user=flask_foosball")
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         
         cur.execute("SELECT id, nickname FROM players ORDER BY nickname")
@@ -33,7 +36,7 @@ def new_game():
                                playerlist=playerlist)
                                
     elif request.method == 'POST':
-        if auth_decorator.principal == "jr592":
+        if auth_decorator.principal in authed_crsids:
             pass
         else:
             return jsonify(valid=False,
@@ -55,7 +58,7 @@ def new_game():
         query_game = "INSERT INTO games (red_score, blue_score) VALUES (%s, %s) RETURNING *"
         query_player = "INSERT INTO games_players (game_id, player_id, team, win) VALUES (%s, %s, %s, %s)"
 
-        conn = psycopg2.connect("dbname=foosball")
+        conn = psycopg2.connect("dbname=foosball user=flask_foosball")
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         
         cur.execute(query_game, (red_score, blue_score))
@@ -94,7 +97,7 @@ def stats_handler(page=None):
 
         
 def stats_index():
-    conn = psycopg2.connect("dbname=foosball")
+    conn = psycopg2.connect("dbname=foosball user=flask_foosball")
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     
     cur.execute("SELECT COUNT(*) FROM games;")
@@ -107,7 +110,7 @@ def stats_index():
                            count = count)
                            
 def stats_leaderboard():
-    conn = psycopg2.connect("dbname=foosball")
+    conn = psycopg2.connect("dbname=foosball user=flask_foosball")
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     
     cur.execute("SELECT id, nickname FROM players WHERE score !=0 ORDER BY score DESC")
@@ -119,7 +122,7 @@ def stats_leaderboard():
                            playerlist = playerlist)
                            
 def stats_recent_games():
-    conn = psycopg2.connect("dbname=foosball")
+    conn = psycopg2.connect("dbname=foosball user=flask_foosball")
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     
     cur.execute("SELECT * FROM games ORDER BY timestamp DESC LIMIT 10")
@@ -138,7 +141,7 @@ def view_game(game_id):
     
     class game: pass
     
-    conn = psycopg2.connect("dbname=foosball")
+    conn = psycopg2.connect("dbname=foosball user=flask_foosball")
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     
     cur.execute("SELECT * FROM games WHERE id=%s", (game_id,))
@@ -146,10 +149,7 @@ def view_game(game_id):
     line = cur.fetchone()
     if not line:
         abort(404)
-    game.id = line['id']
-    game.red_score = line['red_score']
-    game.blue_score = line['blue_score']
-    game.timestamp = line['timestamp']
+    game = line
 
     
     cur.execute(name_query, (game_id, 'red'))
@@ -213,7 +213,7 @@ def view_player(player_id=None):
     #Total games won
     query4 = "SELECT COUNT(*) FROM games_players WHERE player_id=%s AND win"
     
-    conn = psycopg2.connect("dbname=foosball")
+    conn = psycopg2.connect("dbname=foosball user=flask_foosball")
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     
     cur.execute(query1, (player_id,))
@@ -283,5 +283,16 @@ def validate_game(reds, blues, red_score, blue_score):
     if red_score == blue_score:
         valid = False
         reasons.append("There's no such thing as a draw")
+    
+    query = "SELECT COUNT(*) FROM players WHERE id IN %s"
+    
+    conn = psycopg2.connect("dbname=foosball user=flask_foosball")
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    
+    id_list = tuple(a+b)
+    cur.execute(query, (id_list,))
+    if cur.fetchone()['count'] != len(id_list):
+        valid = False
+        reasons.append("Not all players exist")
         
     return (valid, reasons)
