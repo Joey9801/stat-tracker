@@ -149,13 +149,13 @@ def view_game(game_id):
     line = cur.fetchone()
     if not line:
         abort(404)
-    game = line
+    game = dict(line)
 
     
     cur.execute(name_query, (game_id, 'red'))
-    game.reds = cur.fetchall()
+    game['reds'] = cur.fetchall()
     cur.execute(name_query, (game_id, 'blue'))
-    game.blues = cur.fetchall()
+    game['blues'] = cur.fetchall()
     
     return render_template('view_game.html', game=game)
     
