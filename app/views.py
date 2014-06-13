@@ -3,10 +3,13 @@ from app import app
 import psycopg2, psycopg2.extras
 import elo
 from datetime import datetime, timedelta
+from raven.flask_glue import AuthDecorator
+
+auth_decorator = AuthDecorator(desc="Selwyn foosball tracker")
+app.before_request(auth_decorator.before_request)
 
 @app.errorhandler(404)
 def page_not_found(e):
-    print request
     return render_template('404.html'), 404
 
 @app.route('/')
@@ -30,6 +33,11 @@ def new_game():
                                playerlist=playerlist)
                                
     elif request.method == 'POST':
+        if auth_decorator.principal == "jr592":
+            pass
+        else:
+            return jsonify(valid=False,
+                           reasons=["hmmm, you are not Joe.."])
         try:
             reds = map(int, request.form.getlist("reds[]"))
             blues = map(int, request.form.getlist("blues[]"))
@@ -46,7 +54,7 @@ def new_game():
 
         query_game = "INSERT INTO games (red_score, blue_score) VALUES (%s, %s) RETURNING *"
         query_player = "INSERT INTO games_players (game_id, player_id, team, win) VALUES (%s, %s, %s, %s)"
-        
+
         conn = psycopg2.connect("dbname=foosball")
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         
@@ -151,7 +159,7 @@ def view_game(game_id):
     
     return render_template('view_game.html', game=game)
     
-@app.route('/delete_game/<game_id>')
+@app.route('/delete_game/<int:game_id>')
 def delete_game(game_id):
     success = True
     game_id = int(game_id)
@@ -194,14 +202,14 @@ def delete_game(game_id):
 def view_player(player_id=None):
     #player data
     query1 = "SELECT * from players WHERE id=%s"
-    
-    #For calculating rank
-    query2 = "SELECT COUNT(*) FROM players " \
-             "WHERE score > (SELECT score FROM players WHERE id=%s) AND score != 0"
              
     #Total num of games
-    query3 = "SELECT COUNT(*) FROM games_players WHERE player_id=%s"
+    query2 = "SELECT COUNT(*) FROM games_players WHERE player_id=%s"
     
+    #For calculating rank
+    query3 = "SELECT COUNT(*) FROM players " \
+             "WHERE score > (SELECT score FROM players WHERE id=%s) AND score != 0"
+
     #Total games won
     query4 = "SELECT COUNT(*) FROM games_players WHERE player_id=%s AND win"
     
@@ -212,12 +220,17 @@ def view_player(player_id=None):
     player = cur.fetchone()
     
     player['score'] = int(player['score']*1000 + 1000)
-    
+     
     cur.execute(query2, (player_id,))
-    player['rank'] = int(cur.fetchone()['count']) + 1
-    
-    cur.execute(query3, (player_id,))
     player['games_total'] = total = int(cur.fetchone()['count'])
+    
+    if total:
+        cur.execute(query3, (player_id,))
+        player['rank'] = int(cur.fetchone()['count']) + 1
+        player['rank'] = '#' + str(player['rank'])
+    else:
+        player['rank'] = "Unranked"
+
     
     cur.execute(query4, (player_id,))
     player['games_won'] = won = int(cur.fetchone()['count'])

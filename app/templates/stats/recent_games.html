@@ -29,8 +29,7 @@
 {% block scripts %}
   <script>   
     $('.recent-game').click( function () {
-      var new_page = '/stat-tracker/view_game/' + $(this).attr('id');
-      console.log(new_page + ' clicked');
+      var new_page = '/view_game/' + $(this).attr('id');
       window.location.href = new_page;
     });
     

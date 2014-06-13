@@ -120,7 +120,7 @@
                      "blue_score": blue_score};
       
       $(window).delay(1000).queue(function() {
-        var posting = $.post( "/stat-tracker/new_game", payload);
+        var posting = $.post( "/new_game", payload);
         
         posting.done(function( data ) { 
           $('#disabler').fadeOut(500);
@@ -146,7 +146,7 @@
     });
     
     $('.select-name').click( function() {
-      window.open('/stat-tracker/view_player/' + this.id, '_blank');
+      window.open('/view_player/' + this.id, '_blank');
     });
   </script>
 {% endblock %}

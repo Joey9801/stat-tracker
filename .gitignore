@@ -1,7 +1,6 @@
 *.pyc
-tracker_env/*
+venv/*
 *.ignore
-*.txt
 *.jpg
 *.jpeg
 *.csv
