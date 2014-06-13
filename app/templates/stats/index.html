@@ -7,21 +7,18 @@
     <em>{{ count }} games on record</em>
   </div>
   
-  <div id="stats/leaderboard" class="row menu-item">
+  <div id="leaderboard" class="row menu-item">
     Leaderboard
   </div>
-  <div id="stats/recent_games" class="row menu-item">
+  <div id="recent_games" class="row menu-item">
     Recent games
   </div>
 {% endblock %}
   
 {% block scripts %}
   <script>
-    $('.back-btn').click( function () {
-      window.location.href = '/';
-    });
     $('.menu-item').click( function () {
-      var new_page = '/' + $(this).attr('id');
+      var new_page = $(this).attr('id');
       console.log(new_page + ' clicked');
       window.location.href = new_page;
     });

@@ -18,8 +18,7 @@
 {% block scripts %}
   <script>
     $('.menu-item').click( function () {
-      var new_page = '/' + $(this).attr('id');
-      console.log(new_page + ' clicked');
+      var new_page = $(this).attr('id');
       window.location.href = new_page;
     });
   </script>

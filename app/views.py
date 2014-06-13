@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 
 @app.errorhandler(404)
 def page_not_found(e):
+    print request
     return render_template('404.html'), 404
 
 @app.route('/')

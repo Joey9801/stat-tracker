@@ -10,12 +10,8 @@
 
 {% block scripts %}
   <script>
-    $('.back-btn').click( function () {
-      window.location.href = '/stats/index';
-    });
-    
     $('.leaderboard-row').click( function() {
-      window.location.href = '/view_player/' + this.id;
+      window.location.href = '/stat-tracker/view_player/' + this.id;
     });
   </script>
 {% endblock %}

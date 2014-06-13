@@ -1,8 +1,8 @@
 <html>
   <head>
     {% block head %} 
-    <link rel="stylesheet" href="/static/css/bootstrap.css">
-    <link rel="stylesheet" href="/static/css/stat_tracker.css">
+    <link rel="stylesheet" href="/stat-tracker/static/css/bootstrap.css">
+    <link rel="stylesheet" href="/stat-tracker/static/css/stat_tracker.css">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
     <title>{% block title %}Foosball Stat Tracker{% endblock %}</title>
     {% endblock %}
@@ -31,9 +31,9 @@
     </div>
   </body>
   
-  <script src="/static/js/jquery-2.1.1.min.js"></script>
-  <script src="/static/js/bootstrap.js"></script>
-  <script src="/static/js/timeago.js"></script>
+  <script src="/stat-tracker/static/js/jquery-2.1.1.min.js"></script>
+  <script src="/stat-tracker/static/js/bootstrap.js"></script>
+  <script src="/stat-tracker/static/js/timeago.js"></script>
   {% block back_btn_script %}
     <script>
       $('.left-back-btn').click( function () {
@@ -45,7 +45,7 @@
           window.history.back();
       });
       $('.right-back-btn').click( function () {
-        window.location.href = '/';
+        window.location.href = '/stat-tracker';
       });
     </script>
   {% endblock %}
