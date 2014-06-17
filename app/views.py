@@ -9,7 +9,7 @@ auth_decorator = AuthDecorator(desc="Selwyn foosball tracker")
 app.before_request(auth_decorator.before_request)
 
 #crsids authed for adding a new game
-authed_crsids = ['jr592', 'djr61']
+authed_crsids = {'jr592', 'djr61'}
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -40,7 +40,8 @@ def new_game():
             pass
         else:
             return jsonify(valid=False,
-                           reasons=["hmmm, you are not Joe.."])
+                           reasons=["hmmm, you are not Joe.."]), 400
+        
         try:
             reds = map(int, request.form.getlist("reds[]"))
             blues = map(int, request.form.getlist("blues[]"))
@@ -180,7 +181,6 @@ def delete_game(game_id):
     cur.execute(check_expired, (max_time,game_id))
     
     in_date = cur.fetchone()
-    print in_date
     try:
         in_date = in_date['in_date']
     except TypeError:
@@ -213,6 +213,19 @@ def view_player(player_id=None):
     #Total games won
     query4 = "SELECT COUNT(*) FROM games_players WHERE player_id=%s AND win"
     
+    #Goals scored/conceded
+    query5 = "SELECT COALESCE(SUM(red_score), 0)  AS red_goals, " \
+             "       COALESCE(SUM(blue_score), 0) AS blue_goals " \
+             "FROM games " \
+             "JOIN games_players ON games_players.game_id = games.id " \
+             "WHERE games_players.player_id = %s " \
+             "AND games_players.team = %s"
+     
+    #Score over time
+    query6 = "SELECT gp.score, g.timestamp FROM games_players gp " \
+             "JOIN games g ON gp.game_id = g.id " \
+             "WHERE gp.player_id=%s ORDER BY g.timestamp ASC"
+    
     conn = psycopg2.connect("dbname=foosball user=flask_foosball")
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     
@@ -234,15 +247,7 @@ def view_player(player_id=None):
     
     cur.execute(query4, (player_id,))
     player['games_won'] = won = int(cur.fetchone()['count'])
-    
-    
-    query5 = "SELECT COALESCE(SUM(red_score), 0)  AS red_goals, " \
-             "       COALESCE(SUM(blue_score), 0) AS blue_goals " \
-             "FROM games " \
-             "JOIN games_players ON games_players.game_id = games.id " \
-             "WHERE games_players.player_id = %s " \
-             "AND games_players.team = %s"
-    
+
     scored, conceded = 0, 0
     for team, other_team in (('red', 'blue'), ('blue', 'red')):
         cur.execute(query5, (player_id, team))
@@ -253,6 +258,8 @@ def view_player(player_id=None):
     player['goals_scored'] = scored
     player['goals_conceded'] = conceded
     
+    cur.execute(query6, (player_id,))
+    player['score_history'] = cur.fetchall()
     
     if won:
         player['win_percentage'] = float(won)/float(total)*100
@@ -289,9 +296,10 @@ def validate_game(reds, blues, red_score, blue_score):
     conn = psycopg2.connect("dbname=foosball user=flask_foosball")
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     
-    id_list = tuple(a+b)
+    id_list = tuple(reds + blues)
     cur.execute(query, (id_list,))
-    if cur.fetchone()['count'] != len(id_list):
+
+    if int(cur.fetchone()['count']) != len(id_list):
         valid = False
         reasons.append("Not all players exist")
         

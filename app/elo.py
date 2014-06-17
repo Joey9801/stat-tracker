@@ -49,7 +49,7 @@ def skill_update(reds, blues, red_score, blue_score):
         ups, downs = reds, blues
     else:
         delta = 0.5 - binom.cdf(red_score, points, E)
-        ups, downs = blues, reds
+        ups, downs = blues, reds     
 
     return 2 * update_magnitude * delta, set(ups), set(downs)
 
@@ -65,11 +65,14 @@ def predict_score(reds, blues, points=10):
     else:
         return points * E / (1 - E), points
         
-def update_score(cur, game=None):
+def update_score(cur, game):
+    """Updates players score for a single game_id"""
     
     query1 = "SELECT games_players.player_id, players.score, games_players.team FROM games_players " \
              "JOIN players ON games_players.player_id=players.id WHERE games_players.game_id=%s"
     query2 = "UPDATE players SET score=score+%s WHERE id IN %s"
+    query3 = "UPDATE games_players SET score=players.score FROM players " \
+             "WHERE players.id = games_players.player_id AND games_players.game_id=%s;"
     
     game_id, red_score, blue_score = game['id'], game['red_score'], game['blue_score']
     
@@ -88,12 +91,9 @@ def update_score(cur, game=None):
     ups = tuple(ups)
     downs = tuple(downs)
     
-    print "updating player skills for game {0}".format(game_id)
-    print "adj, ups, downs = "
-    print adj, ups, downs
-    
     cur.execute(query2, (adj, ups))
     cur.execute(query2, (-adj, downs))
+    cur.execute(query3, (game_id,))
     
     
 def recalculate_scores():
@@ -101,6 +101,7 @@ def recalculate_scores():
     conn = psycopg2.connect("dbname=foosball")
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cur.execute("UPDATE players SET score=0");
+    cur.execute("UPDATE games_players SET score=0");
     cur.execute("SELECT * FROM games");
     for game in cur.fetchall():
         update_score(cur, game)
