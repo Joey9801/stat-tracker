@@ -4,12 +4,11 @@ import psycopg2, psycopg2.extras
 import elo
 from datetime import datetime, timedelta
 from raven.flask_glue import AuthDecorator
-
 auth_decorator = AuthDecorator(desc="Selwyn foosball tracker")
 app.before_request(auth_decorator.before_request)
 
 #crsids authed for adding a new game
-authed_crsids = {'jr592', 'djr61'}
+authed_crsids = {'jr592', 'djr61', 'jmc227', 'tp357', 'hndw2'}
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -56,13 +55,14 @@ def new_game():
             return jsonify(valid=False, 
                            reasons=reasons), 400
 
-        query_game = "INSERT INTO games (red_score, blue_score) VALUES (%s, %s) RETURNING *"
+        query_game = "INSERT INTO games (red_score, blue_score, added_by)" \
+                     " VALUES (%s, %s, (SELECT id FROM players WHERE crsid=%s)) RETURNING *"
         query_player = "INSERT INTO games_players (game_id, player_id, team, win) VALUES (%s, %s, %s, %s)"
 
         conn = psycopg2.connect("dbname=foosball user=flask_foosball")
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         
-        cur.execute(query_game, (red_score, blue_score))
+        cur.execute(query_game, (red_score, blue_score, auth_decorator.principal))
         game = cur.fetchone()
         
         for player in reds:
