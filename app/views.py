@@ -114,7 +114,14 @@ def stats_leaderboard():
     conn = psycopg2.connect("dbname=foosball user=flask_foosball")
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     
-    cur.execute("SELECT id, nickname FROM players WHERE score !=0 ORDER BY score DESC")
+    query = "select distinct players.* from games " \
+                "join games_players on (games.id=games_players.game_id) " \
+                "join players on (games_players.player_id=players.id) " \
+                "where games.timestamp > now()- interval '1 months'" \
+                "order by players.score desc"
+
+    #cur.execute("SELECT id, nickname FROM players WHERE score !=0 ORDER BY score DESC")
+    cur.execute(query)
     playerlist = cur.fetchall()
     
     cur.close()
@@ -207,8 +214,14 @@ def view_player(player_id=None):
     query2 = "SELECT COUNT(*) FROM games_players WHERE player_id=%s"
     
     #For calculating rank
-    query3 = "SELECT COUNT(*) FROM players " \
-             "WHERE score > (SELECT score FROM players WHERE id=%s) AND score != 0"
+    query3 = "select count(*) from (" \
+                "select distinct players.* from games " \
+                "join games_players on (games.id=games_players.game_id) " \
+                "join players on (games_players.player_id=players.id) " \
+                "where games.timestamp > now()- interval '1 months' " \
+                "and players.score > (SELECT score from players WHERE id=%s)" \
+                "order by players.score desc" \
+                ") as temp"
 
     #Total games won
     query4 = "SELECT COUNT(*) FROM games_players WHERE player_id=%s AND win"
