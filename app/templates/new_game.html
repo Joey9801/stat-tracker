@@ -35,6 +35,13 @@
 
   </div>
 
+  <div class="row predict">
+    <div id="predict-num predict-adj-red"></div>
+    <div id="predict-num predict-score-red"></div>
+    <div id="predict-num predict-score-blue"></div>
+    <div id="predict-num predict-adj-blue"></div>
+  </div>
+
   <div class="row submit">
     Submit
     <br>
@@ -49,7 +56,9 @@
     
     var red_score = 0;
     var blue_score = 0;
-    
+
+    var predict_nonce = 0;
+
     function update_players() {
       reds = new Array();
       blues = new Array();
@@ -60,7 +69,37 @@
             blues.push( Number($(this).attr('id')) );
       });
     }
-    
+
+    function predict() {
+      // we're liable to start several delays and then requests.
+      // if we notice that the nonce has been increased then abort this req.
+      predict_nonce += 1;
+      var this_nonce = predict_nonce;
+
+      if (reds.length == 0 || blues.length == 0
+          || red_score == blue_score || red_score + blue_score == 0) {
+        $(".predict-num").text();
+      }
+
+      var payload = {"reds[]": reds,
+                     "blues[]": blues,
+                     "red_score": red_score,
+                     "blue_score": blue_score};
+
+      $(window).delay(1000).queue(function() {
+        if (predict_nonce != this_nonce)  return;
+
+        $.post( "/predict", payload).done(function( data ) { 
+          if (predict_nonce != this_nonce)  return;
+          console.log(data);
+          $(".predict-adj-red").text(payload.adj_red);
+          $(".predict-adj-blue").text(payload.adj_blue);
+          $(".predict-score-red").text(payload.score_red);
+          $(".predict-score-blue").text(payload.score_blue);
+        });
+      }
+    }
+
     $(".selector").click(function() {
       var item = $(this).siblings( '.select-name' );
       var clicked, current;
@@ -92,6 +131,7 @@
         item.removeClass('red');
       } 
       update_players();
+      predict();
     });
     
     $(".score").click(function() {
@@ -100,10 +140,11 @@
       if (num==11)
         num=0;
       $(this).text(num);
-      red_score = Number($('#red-score').text())
-      blue_score = Number($('#blue-score').text())
+      red_score = Number($('#red-score').text());
+      blue_score = Number($('#blue-score').text());
+      predict();
     });
-    
+
     $('.submit').click( function() {
       console.log("submitting data");
       console.log("reds = ", reds);
