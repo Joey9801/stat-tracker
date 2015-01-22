@@ -279,7 +279,7 @@
 #predict {
     display: block;
     font-size: 40px;
-    margin-top: -30px;
+    margin-top: -20px;
 }
 
 #predict-score {
@@ -288,4 +288,8 @@
 
 #predict-score > div {
     color: #8C8C8C;
+}
+
+#predict .score {
+    width: 45%;
 }
