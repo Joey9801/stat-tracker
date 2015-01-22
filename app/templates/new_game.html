@@ -36,10 +36,9 @@
   </div>
 
   <div class="row predict">
-    <div id="predict-num predict-adj-red"></div>
-    <div id="predict-num predict-score-red"></div>
-    <div id="predict-num predict-score-blue"></div>
-    <div id="predict-num predict-adj-blue"></div>
+    <div class="predict-num" id="predict-adj"></div>
+    <div class="predict-num" id="predict-score-red"></div>
+    <div class="predict-num" id="predict-score-blue"></div>
   </div>
 
   <div class="row submit">
@@ -93,10 +92,18 @@
         $.post( "/predict", payload).done(function( data ) { 
           if (predict_nonce != this_nonce)  return;
           console.log(data);
-          $(".predict-adj-red").text(payload.adj_red);
-          $(".predict-adj-blue").text(payload.adj_blue);
-          $(".predict-score-red").text(payload.score_red);
-          $(".predict-score-blue").text(payload.score_blue);
+
+          data.adj_red  = Math.round(data.adj_red * 1000);
+          data.adj_blue = Math.round(data.adj_blue * 1000);
+          if (data.adj_red != -data.adj_blue)  return;
+
+          adj_class = (data.adj_red < 0 ? 'team-blue' : 'team-red');
+          adj_value = '+' + Math.abs(data.adj_red);
+
+          $("#predict-adj").text(adj_value);
+          $("#predict-adj").removeClass("team-red team-blue").addClass(adj_class);
+          $("#predict-score-red").text(data.score_red);
+          $("#predict-score-blue").text(data.score_blue);
         });
       }, 1000);
     }

@@ -101,7 +101,11 @@ def predict_score():
     if not valid:
         return jsonify(valid=False, reasons=reasons), 400
 
-    r = elo.predict_scores_adjustments(reds, blues, red_score, blue_score)
+    conn = psycopg2.connect("dbname=foosball user=flask_foosball")
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    r = elo.predict_scores_adjustments(cur, reds, blues, red_score, blue_score)
+    cur.close()
+    conn.close()
 
     return jsonify(valid=True, **r)
 
