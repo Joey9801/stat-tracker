@@ -291,5 +291,6 @@
 }
 
 #predict .score {
+    cursor: default;
     width: 45%;
 }
