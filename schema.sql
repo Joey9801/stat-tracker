@@ -38,3 +38,4 @@ GRANT ALL ON TABLE games TO flask_foosball;
 GRANT USAGE ON SEQUENCE games_id_seq TO flask_foosball;
 GRANT ALL ON TABLE games_players TO flask_foosball;
 GRANT SELECT ON TABLE players TO flask_foosball;
+GRANT UPDATE (score) ON TABLE PLAYERS TO flask_foosball;
