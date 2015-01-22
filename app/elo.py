@@ -1,9 +1,11 @@
+from __future__ import division
+
 import numpy as np
 from scipy.stats import binom, norm
 import psycopg2, psycopg2.extras
 
-# Averaging & handicaps for different team sizes
-magic_K = [None, 0.6, 0.5, 0.4, 0.1]  # 1-indexed
+# Handicaps for different team sizes
+magic_K = [None, -0.6, 0, 0.2, -0.1]  # 1-indexed
 
 # Adjustments will be in [-update_magnitude, update_magnitude]
 # sizes
@@ -19,10 +21,12 @@ def _point_win_probability(reds, blues):
     assert 1 <= len(reds) <= 4
     assert 1 <= len(blues) <= 4
 
+    absI = float(len(reds))
+    absJ = float(len(blues))
     K_I = magic_K[len(reds)]
     K_J = magic_K[len(blues)]
-    tau = K_I * sum(reds.values()) - K_J * sum(blues.values())
-    phi = sigma * np.sqrt( K_I ** 2 * len(reds) + K_J ** 2 * len(blues) )
+    tau = sum(reds.values()) / absI - sum(blues.values()) / absJ + K_I - K_J
+    phi = sigma * np.sqrt( 1 / absI + 1 / absJ )
     E = norm.cdf( tau / phi )
     return E
 
@@ -97,7 +101,6 @@ def update_score(cur, game):
     
     
 def recalculate_scores():
-
     conn = psycopg2.connect("dbname=foosball")
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cur.execute("UPDATE players SET score=0");

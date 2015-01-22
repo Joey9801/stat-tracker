@@ -42,18 +42,24 @@ We need to modify this to handle multiple teams, take into account the margin by
 
 The Setup:
 \begin{align*}
-    &\text{Teams } && I, J \text{ (index sets)} \\
+    &\text{Teams } && I, J \quad\text{(index sets)} \\
     &\text{Skills } && s_i, s_j \quad (i \in I, j \in J) \\
     &\text{Player performance } && U_i \sim N(s_i, \sigma^2) \\
     &                           && V_i \sim N(s_j, \sigma^2) \\
-    &\text{Team performance } && X_I = K_{|I|} \sum_{i \in I} U_i \sim N(K_{|I|} \sum_{i \in I} s_i, |I| K_{|I|}^2 \sigma^2) \\
-    &                         && X_J = K_{|J|} \sum_{i \in J} V_i \sim N(K_{|J|} \sum_{j \in J} s_j, |J| K_{|J|}^2 \sigma^2)
+    &\text{Team performance } && X_I = \frac{1}{|I|} \sum_{i \in I} U_i + K_{|I|} \sim N\left( \frac{1}{|I|} \sum_{i \in I} s_i + K_{|I|}, \quad \frac{1}{|I|} \sigma^2 \right) \\
+    &                         && X_J = \frac{1}{|J|} \sum_{i \in J} V_i + K_{|J|} \sim N\left( \frac{1}{|J|} \sum_{j \in J} s_j + K_{|J|}, \quad  \frac{1}{|J|} \sigma^2 \right)
 \end{align*}
 where $K_{\{1,2,3,4\}}$ is a magic constant.
 
-If we set $K_n = \frac{1}{n}$ then we would be saying that a team's performance is the average of the performance of all its members. However, this is probably not a reasonable assumption.
-
-Hypothesis: a two person team is ``twice as good'' as a one person team and it's performance is the sum of the two players' performances. However, a 4 person team is no where near twice as good as a two person team, hence the magic constant K. 
+The magic constant $K$ is to handle the case where the teams are unbalanced.
+\begin{align*}
+    K_1 = -0.6\sigma &&
+    K_2 =  0 &&
+    K_3 =  0.2\sigma &&
+    K_4 = -0.1\sigma
+\end{align*}
+If the teams are the same size, the presence of $K$ has no effect on $X_I - X_J$. However, when they are mismatched, it serves to penalise one of the teams.
+In words, the above choices assert that given people of equal skill, a three player team is best, followed by two, then four, then one. As an example, those numbers chosen correspond (rougly) to expecting a 10--4 loss when a three player team plays someone on their own.
 
 So, the probability that team $I$ wins any point is:
 \[
@@ -63,8 +69,8 @@ So, the probability that team $I$ wins any point is:
 \]
 where
 \begin{align*}
-    \tau &= K_{|I|} \sum_{i \in I} s_i - K_{|J|} \sum_{j \in J} s_j \\
-    \varphi &= \sqrt{ \sigma^2 ( K_{|I|}^2 |I| + K_{|J|}^2 |J| ) }
+    \tau &= \frac{1}{|I|} \sum_{i \in I} s_i - \frac{1}{|J|} \sum_{j \in J} s_j + K_{|I|} - K_{|J|} \\
+    \varphi &= \sqrt{ \sigma^2 \left( \frac{1}{|I|} + \frac{1}{|J|} \right) }
 \end{align*}
 
 Suppose now that the actual scores were $a$ and $b$; crucially $a + b$ points were played.
