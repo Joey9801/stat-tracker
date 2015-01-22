@@ -35,9 +35,7 @@ def skill_update(reds, blues, red_score, blue_score):
     reds, blues should be dictionaries mapping player_id to current
     skill.
     
-    Returns
-        update_amount, ups, downs
-    where update_amount is a float, and ups & downs are sets of player IDs
+    Returns two floats:  delta_red, delta_blue
     """
 
     assert red_score >= 0 and blue_score >= 0
@@ -50,12 +48,13 @@ def skill_update(reds, blues, red_score, blue_score):
 
     if red_score > blue_score:
         delta = 0.5 - binom.sf(red_score - 1, points, E)
-        ups, downs = reds, blues
+        s_red, s_blue = 1, -1
     else:
         delta = 0.5 - binom.cdf(red_score, points, E)
-        ups, downs = blues, reds     
+        s_red, s_blue = -1, 1
 
-    return 2 * update_magnitude * delta, set(ups), set(downs)
+    m = 2 * update_magnitude * delta
+    return m * s_red, m * s_blue
 
 def predict_score(reds, blues, points=10):
     """
@@ -90,13 +89,13 @@ def update_score(cur, game):
         else:
             blues[player] = score
     
-    adj, ups, downs = skill_update(reds, blues, red_score, blue_score)
+    adj_red, adj_blue = skill_update(reds, blues, red_score, blue_score)
     
     ups = tuple(ups)
     downs = tuple(downs)
     
-    cur.execute(query2, (adj, ups))
-    cur.execute(query2, (-adj, downs))
+    cur.execute(query2, (adj_red, tuple(reds)))
+    cur.execute(query2, (adj_blue, tuple(blues)))
     cur.execute(query3, (game_id,))
     
     
