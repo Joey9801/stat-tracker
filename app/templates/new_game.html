@@ -35,10 +35,12 @@
 
   </div>
 
-  <div class="row predict">
-    <div class="predict-num" id="predict-adj"></div>
-    <div class="predict-num" id="predict-score-red"></div>
-    <div class="predict-num" id="predict-score-blue"></div>
+  <div class="row" id="predict">
+    <div id="predict-adj"></div>
+    <div id="predict-score">
+      <div class="score score-left" id="predict-score-red"></div>
+      <div class="score score-right" id="predict-score-blue"></div>
+    </div>
   </div>
 
   <div class="row submit">
@@ -69,6 +71,7 @@
       });
     }
 
+    $("#predict").hide();
     function predict() {
       // we're liable to start several delays and then requests.
       // if we notice that the nonce has been increased then abort this req.
@@ -77,7 +80,7 @@
 
       if (reds.length == 0 || blues.length == 0
           || red_score == blue_score || red_score + blue_score == 0) {
-        $(".predict-num").text("");
+        $("#predict").hide();
         return;
       }
 
@@ -102,8 +105,9 @@
 
           $("#predict-adj").text(adj_value);
           $("#predict-adj").removeClass("team-red team-blue").addClass(adj_class);
-          $("#predict-score-red").text(data.score_red);
-          $("#predict-score-blue").text(data.score_blue);
+          $("#predict-score-red").text(Math.round(data.score_red * 10) / 10);
+          $("#predict-score-blue").text(Math.round(data.score_blue * 10) / 10);
+          $("#predict").show();
         });
       }, 1000);
     }

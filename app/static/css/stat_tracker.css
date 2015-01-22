@@ -275,3 +275,17 @@
     cursor: default;
 
 }
+
+#predict {
+    display: block;
+    font-size: 40px;
+    margin-top: -30px;
+}
+
+#predict-score {
+    margin-top: -57px;
+}
+
+#predict-score > div {
+    color: #8C8C8C;
+}
