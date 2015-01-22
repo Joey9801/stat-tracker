@@ -86,6 +86,29 @@ def new_game():
                        game_id=game['id'],
                        redirect=url_for('view_game', game_id=game['id'])), 202
 
+@app.route('/predict', methods=["POST"])
+def predict_score():
+    try:
+        reds = map(int, request.form.getlist("reds[]"))
+        blues = map(int, request.form.getlist("blues[]"))
+        red_score = int(request.form.get("red_score"))
+        blue_score = int(request.form.get("blue_score"))
+        valid, reasons = validate_game(reds, blues, red_score, blue_score)
+    except ValueError, TypeError:
+        valid = False
+        reasons = ["Error while processing game"]
+
+    if not valid:
+        return jsonify(valid=False, reasons=reasons), 400
+
+    score_red, score_blue = elo.predict_score(reds, blues)
+    adj_red, adj_blue = elo.skill_update(reds, blues, red_score, blue_score)
+
+    return jsonify(valid=True,
+                   score_red=score_red, score_blue=score_blue,
+                   adj_red=adj_red, adj_blue=adj_blue)
+
+
 @app.route('/stats')
 @app.route('/stats/<page>')
 def stats_handler(page=None):
