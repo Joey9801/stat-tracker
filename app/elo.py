@@ -91,9 +91,6 @@ def update_score(cur, game):
     
     adj_red, adj_blue = skill_update(reds, blues, red_score, blue_score)
     
-    ups = tuple(ups)
-    downs = tuple(downs)
-    
     cur.execute(query2, (adj_red, tuple(reds)))
     cur.execute(query2, (adj_blue, tuple(blues)))
     cur.execute(query3, (game_id,))
