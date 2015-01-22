@@ -101,12 +101,9 @@ def predict_score():
     if not valid:
         return jsonify(valid=False, reasons=reasons), 400
 
-    score_red, score_blue = elo.predict_score(reds, blues)
-    adj_red, adj_blue = elo.skill_update(reds, blues, red_score, blue_score)
+    r = elo.predict_scores_adjustments(reds, blues, red_score, blue_score)
 
-    return jsonify(valid=True,
-                   score_red=score_red, score_blue=score_blue,
-                   adj_red=adj_red, adj_blue=adj_blue)
+    return jsonify(valid=True, **r)
 
 
 @app.route('/stats')

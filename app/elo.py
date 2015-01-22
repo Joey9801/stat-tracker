@@ -94,8 +94,22 @@ def update_score(cur, game):
     cur.execute(query2, (adj_red, tuple(reds)))
     cur.execute(query2, (adj_blue, tuple(blues)))
     cur.execute(query3, (game_id,))
-    
-    
+ 
+def predict_scores_adjustments(cur, reds, blues, red_score, blue_score):
+    """Predicts the scores and skill changes from a list of team members"""
+
+    query1 = "SELECT id, score FROM games_players WHERE player_id IN %s"
+    cur.execute(query1, (tuple(reds), ))
+    reds = dict(cur)
+    cur.execute(query1, (tuple(blues), ))
+    blues = dict(cur)
+
+    r = {}
+    r["adj_red"], r["adj_blue"] = skill_update(reds, blues, red_score, blue_score)
+    r["score_red"], r["score_blue"] = repredict_score(reds, blues)
+    return r
+
+
 def recalculate_scores():
     conn = psycopg2.connect("dbname=foosball")
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
