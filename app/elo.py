@@ -102,7 +102,7 @@ def recalculate_scores():
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cur.execute("UPDATE players SET score=0");
     cur.execute("UPDATE games_players SET score=0");
-    cur.execute("SELECT * FROM games");
+    cur.execute("SELECT * FROM games order by \"timestamp\" asc");
     for game in cur.fetchall():
         update_score(cur, game)
     conn.commit()
