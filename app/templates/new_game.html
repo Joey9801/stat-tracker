@@ -87,7 +87,7 @@
                      "red_score": red_score,
                      "blue_score": blue_score};
 
-      $(window).delay(1000).queue(function() {
+      setTimeout(function() {
         if (predict_nonce != this_nonce)  return;
 
         $.post( "/predict", payload).done(function( data ) { 
@@ -98,7 +98,7 @@
           $(".predict-score-red").text(payload.score_red);
           $(".predict-score-blue").text(payload.score_blue);
         });
-      }
+      }, 1000);
     }
 
     $(".selector").click(function() {
