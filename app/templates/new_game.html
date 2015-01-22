@@ -78,7 +78,8 @@
 
       if (reds.length == 0 || blues.length == 0
           || red_score == blue_score || red_score + blue_score == 0) {
-        $(".predict-num").text();
+        $(".predict-num").text("");
+        return;
       }
 
       var payload = {"reds[]": reds,
