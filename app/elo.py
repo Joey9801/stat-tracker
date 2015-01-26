@@ -95,20 +95,36 @@ def update_score(cur, game):
     cur.execute(query2, (adj_blue, tuple(blues)))
     cur.execute(query3, (game_id,))
  
-def predict_scores_adjustments(cur, reds, blues, red_score, blue_score):
-    """Predicts the scores and skill changes from a list of team members"""
-
+def _get_scores(cur, players):
     query1 = "SELECT id, score FROM players WHERE id IN %s"
-    cur.execute(query1, (tuple(reds), ))
-    reds = {r["id"]: r["score"] for r in cur}
-    cur.execute(query1, (tuple(blues), ))
-    blues = {r["id"]: r["score"] for r in cur}
+    cur.execute(query1, (tuple(players), ))
+    return {r["id"]: r["score"] for r in cur}
 
-    r = {}
-    r["adj_red"], r["adj_blue"] = skill_update(reds, blues, red_score, blue_score)
-    r["score_red"], r["score_blue"] = predict_score(reds, blues)
-    return r
+def predict_score(cur, reds, blues):
+    """
+    Predicts the scores from a list of team members
+    
+    Returns red_score, blue_score
+    """
 
+    reds = _get_scores(cur, reds)
+    blues = _get_scores(cur, blues)
+    return predict_score(reds, blues)
+
+def predict_updates(cur, reds, blues):
+    """
+    Predicts the score updates for various potential final scores.
+
+    Returns a dictionary mapping possible final scores (a pair of integers)
+    to pairs (red_adjustment, blue_adjustment).
+    """
+
+    reds = _get_scores(cur, reds)
+    blues = _get_scores(cur, blues)
+
+    scores = [(10, i) for i in range(10)] + [(i, 10) for i in range(10)]
+    return {(red_score, blue_score): skill_update(reds, blues, red_score, blue_score)
+            for red_score, blue_score in scores}
 
 def recalculate_scores():
     conn = psycopg2.connect("dbname=foosball")

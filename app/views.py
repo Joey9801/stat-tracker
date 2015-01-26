@@ -87,27 +87,29 @@ def new_game():
                        redirect=url_for('view_game', game_id=game['id'])), 202
 
 @app.route('/predict', methods=["POST"])
-def predict_score():
+def predict():
     try:
         reds = map(int, request.form.getlist("reds[]"))
         blues = map(int, request.form.getlist("blues[]"))
-        red_score = int(request.form.get("red_score"))
-        blue_score = int(request.form.get("blue_score"))
-        valid, reasons = validate_game(reds, blues, red_score, blue_score)
+        valid, reasons = validate_players(reds, blues)
     except ValueError, TypeError:
         valid = False
-        reasons = ["Error while processing game"]
+        reasons = ["Error while processing players"]
 
     if not valid:
         return jsonify(valid=False, reasons=reasons), 400
 
     conn = psycopg2.connect("dbname=foosball user=flask_foosball")
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    r = elo.predict_scores_adjustments(cur, reds, blues, red_score, blue_score)
+    s = elo.predict_score(cur, reds, blues)
+    u = elo.predict_updates(cur, reds, blues)
     cur.close()
     conn.close()
 
-    return jsonify(valid=True, **r)
+    # in JSON, all keys must be strings.
+    u = {"{0}:{1}".format(*k): v for k, v in u}
+
+    return jsonify(valid=True, score=s, updates=u)
 
 
 @app.route('/stats')
@@ -305,8 +307,8 @@ def view_player(player_id=None):
     
     return render_template('view_player.html',
                            player = player)
-        
-def validate_game(reds, blues, red_score, blue_score):
+
+def validate_players(reds, blues):
     reasons = list()
     valid = True
     if not len(reds):
@@ -318,16 +320,7 @@ def validate_game(reds, blues, red_score, blue_score):
     if any(i in reds for i in blues):
         valid = False
         reasons.append("Cannot have the same player on both sides")
-    if red_score < 0 or red_score > 10:
-        valid = False
-        reasons.append("Red score out of bounds")
-    if blue_score < 0 or blue_score > 10:
-        valid = False
-        reasons.append("Blue score out of bounds")
-    if red_score == blue_score:
-        valid = False
-        reasons.append("There's no such thing as a draw")
-    
+
     query = "SELECT COUNT(*) FROM players WHERE id IN %s"
     
     conn = psycopg2.connect("dbname=foosball user=flask_foosball")
@@ -341,3 +334,23 @@ def validate_game(reds, blues, red_score, blue_score):
         reasons.append("Not all players exist")
         
     return (valid, reasons)
+
+def validate_scores(red_score, blue_score):
+    reasons = list()
+    valid = True
+    if red_score < 0 or red_score > 10:
+        valid = False
+        reasons.append("Red score out of bounds")
+    if blue_score < 0 or blue_score > 10:
+        valid = False
+        reasons.append("Blue score out of bounds")
+    if red_score == blue_score:
+        valid = False
+        reasons.append("There's no such thing as a draw")
+    
+    return (valid, reasons)
+
+def validate_game(reds, blues, red_score, blue_score):
+    valid1, reasons1 = validate_scores(red_score, blue_score)
+    valid2, reasons2 = validate_players(reds, blues)
+    return (valid1 and valid2, reasons1 + reasons2)
