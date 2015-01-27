@@ -8,7 +8,7 @@ auth_decorator = AuthDecorator(desc="Selwyn foosball tracker")
 app.before_request(auth_decorator.before_request)
 
 #crsids authed for adding a new game
-authed_crsids = {'jr592', 'djr61', 'jmc227', 'tp357', 'hndw2'}
+authed_crsids = {'jr592', 'djr61', 'jmc227', 'tp357', 'hndw2', 'cfc46'}
 
 @app.errorhandler(404)
 def page_not_found(e):
