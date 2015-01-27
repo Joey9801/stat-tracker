@@ -20,7 +20,7 @@ CREATE TABLE games (
 );
 
 CREATE TABLE games_players (
-    game_id integer NOT NULL REFERENCES games(id),
+    game_id integer NOT NULL REFERENCES games(id) ON DELETE CASCADE,
     player_id integer NOT NULL REFERENCES players(id),
     team team NOT NULL,
     win boolean NOT NULL,
