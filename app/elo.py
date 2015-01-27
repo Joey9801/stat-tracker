@@ -121,3 +121,6 @@ def recalculate_scores():
     conn.commit()
     cur.close()
     conn.close()
+
+if __name__ == "__main__":
+    recalculate_scores()
