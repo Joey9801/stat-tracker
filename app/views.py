@@ -101,13 +101,13 @@ def predict():
 
     conn = psycopg2.connect("dbname=foosball user=flask_foosball")
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    s = elo.predict_score(cur, reds, blues)
-    u = elo.predict_updates(cur, reds, blues)
+    s = elo.lookup_predict_score(cur, reds, blues)
+    u = elo.lookup_predict_updates(cur, reds, blues)
     cur.close()
     conn.close()
 
     # in JSON, all keys must be strings.
-    u = {"{0}:{1}".format(*k): v for k, v in u}
+    u = {"{0}:{1}".format(*k): v for k, v in u.items()}
 
     return jsonify(valid=True, score=s, updates=u)
 

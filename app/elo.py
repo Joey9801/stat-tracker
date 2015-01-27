@@ -100,7 +100,7 @@ def _get_scores(cur, players):
     cur.execute(query1, (tuple(players), ))
     return {r["id"]: r["score"] for r in cur}
 
-def predict_score(cur, reds, blues):
+def lookup_predict_score(cur, reds, blues):
     """
     Predicts the scores from a list of team members
     
@@ -111,7 +111,7 @@ def predict_score(cur, reds, blues):
     blues = _get_scores(cur, blues)
     return predict_score(reds, blues)
 
-def predict_updates(cur, reds, blues):
+def lookup_predict_updates(cur, reds, blues):
     """
     Predicts the score updates for various potential final scores.
 

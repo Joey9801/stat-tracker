@@ -106,7 +106,7 @@
       });
     }
 
-    function show_predicitons() {
+    function show_predictions() {
       var shown_something = false;
 
       var score = predictions.score;
@@ -121,6 +121,11 @@
       if (updates !== undefined) {
         pred_red  = updates[10 + ":" + blue_score];  // if red won
         pred_blue = updates[red_score + ":" + 10];   // if blue won
+
+        if(red_score == 10 || blue_score == 10){
+            pred_red  = updates[red_score + ":" + blue_score];
+            pred_blue = [-pred_red[0], -pred_red[1]];
+        }
       } else {
         pred_red = pred_blue = undefined;
       }
@@ -135,8 +140,8 @@
         $("#predict-adj-red").text("");
       }
 
-      if (pblue_blue !== undefined) {
-        var adj_blue = Math.round(pblue_blue[0] * 1000);
+      if (pred_blue !== undefined) {
+        var adj_blue = Math.round(pred_blue[0] * 1000);
         if (adj_blue >= 0)  adj_blue = "+" + adj_blue;
         $("#predict-adj-blue").text(adj_blue);
         shown_something = true;

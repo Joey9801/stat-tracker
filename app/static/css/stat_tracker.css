@@ -284,6 +284,7 @@
 
 #predict-score {
     margin-top: -57px;
+    float: center;
 }
 
 #predict-score > div {
@@ -293,4 +294,9 @@
 #predict .score {
     cursor: default;
     width: 45%;
+}
+
+.predict-adj.team-red{
+    margin-bottom: -55px;
+    height: 57px;
 }
