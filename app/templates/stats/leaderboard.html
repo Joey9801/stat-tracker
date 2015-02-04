@@ -1,11 +1,16 @@
 {% extends "content-page.html" %}
 
 {% block content %}
-  {% for player in playerlist %}
-  <div id={{ player.id }} class="leaderboard-row">
-    #{{loop.index}}. {{player.nickname}}
-  </div>
-  {%endfor%}
+  <ol type='1'>
+    {% for player in playerlist %}
+    <li id={{ player.id }}
+        data-score={{ player.score }}
+        data-winp={{ player.winp }}
+        class="leaderboard-row">
+      {{player.nickname}}
+    </li>
+    {%endfor%}
+  </ol>
 {% endblock %}
 
 {% block scripts %}
