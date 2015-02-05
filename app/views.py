@@ -179,7 +179,7 @@ def stats_recent_games():
     conn.close()
     
     return render_template('stats/games.html',
-                           games = games)
+                           title="Recent Games", games=games)
 
 def stats_humiliation():
     conn = psycopg2.connect("dbname=foosball user=flask_foosball")
@@ -188,13 +188,14 @@ def stats_humiliation():
     cur.execute("SELECT * FROM games "
                 "WHERE (red_score = 0 AND blue_score = 10) "
                 "   OR (blue_score = 0 AND red_score = 10) "
-                "ORDER BY timestamp")
+                "ORDER BY timestamp DESC")
     games = cur.fetchall()
 
     cur.close()
     conn.close()
 
-    return render_template('stats/games.html', games=games)
+    return render_template('stats/games.html',
+                           title="10 : 0 Games", games=games)
                            
 @app.route('/view_game/<int:game_id>')
 def view_game(game_id):
