@@ -178,8 +178,23 @@ def stats_recent_games():
     cur.close()
     conn.close()
     
-    return render_template('stats/recent_games.html',
+    return render_template('stats/games.html',
                            games = games)
+
+def stats_humiliation():
+    conn = psycopg2.connect("dbname=foosball user=flask_foosball")
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    cur.execute("SELECT * FROM games "
+                "WHERE (red_score = 0 AND blue_score = 10) "
+                "   OR (blue_score = 0 AND red_score = 10) "
+                "ORDER BY timestamp")
+    games = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return render_template('stats/games.html', games=games)
                            
 @app.route('/view_game/<int:game_id>')
 def view_game(game_id):
