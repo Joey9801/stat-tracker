@@ -122,8 +122,8 @@
         pred_red  = updates[10 + ":" + blue_score];  // if red won
         pred_blue = updates[red_score + ":" + 10];   // if blue won
 
-        if(red_score == 10 || blue_score == 10){
-            pred_red  = updates[red_score + ":" + blue_score];
+        if(red_score == 10 || blue_score == 10) {
+          pred_red = pred_blue = updates[red_score + ":" + blue_score];
         }
       } else {
         pred_red = pred_blue = undefined;
