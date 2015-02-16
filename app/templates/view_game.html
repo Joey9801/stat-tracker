@@ -13,6 +13,8 @@
     <div style="position:relative; top:-10px; z-index:-1">
     :
     </div>
+    <div id="smackdown" class="smackdown">
+    </div>
   </div>
 
   <div class="row team">
@@ -39,5 +41,17 @@
     });
     
     $('.timeago').timeago();
+    
+    if(    $('#blue-score').text().trim() == "0"
+        || $('#red-score').text().trim()  == "0") {
+
+      $.getJSON( "/static/js/data.json", function( data ) {
+              humiliations = data.humiliations;
+              var smackdown = humiliations[Math.floor(Math.random() * humiliations.length) ];
+              $('#smackdown').text(smackdown);
+          });
+    }
+
+
   </script>
 {% endblock %}

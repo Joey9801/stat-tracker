@@ -9,7 +9,7 @@ magic_K = [None, -0.6, 0, 0.2, -0.1]  # 1-indexed
 
 # Adjustments will be in [-update_magnitude, update_magnitude]
 # sizes
-update_magnitude = 0.075
+update_magnitude = 0.069
 
 # This should be on the scale of typical differences between skills
 sigma = 1

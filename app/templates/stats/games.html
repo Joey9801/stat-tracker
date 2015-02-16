@@ -1,9 +1,9 @@
 {% extends "content-page.html" %}
-{% block title %}Recent Games{% endblock %}
+{% block title %}{{ title }}{% endblock %}
 
 {% block content %}
   <div class="row title">
-    Recent Games
+    {{ title }}
   </div>
 
   {% for game in games %}

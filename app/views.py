@@ -178,8 +178,24 @@ def stats_recent_games():
     cur.close()
     conn.close()
     
-    return render_template('stats/recent_games.html',
-                           games = games)
+    return render_template('stats/games.html',
+                           title="Recent Games", games=games)
+
+def stats_humiliation():
+    conn = psycopg2.connect("dbname=foosball user=flask_foosball")
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    cur.execute("SELECT * FROM games "
+                "WHERE (red_score = 0 AND blue_score = 10) "
+                "   OR (blue_score = 0 AND red_score = 10) "
+                "ORDER BY timestamp DESC")
+    games = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return render_template('stats/games.html',
+                           title="10 : 0 Games", games=games)
                            
 @app.route('/view_game/<int:game_id>')
 def view_game(game_id):
@@ -211,10 +227,10 @@ def delete_game(game_id):
     success = True
     game_id = int(game_id)
     if 'added_games' not in session:
-        msg = "You haven't added any games"
+        msg = "You can only delete games that you put in"
         return jsonify(msg=msg), 403
     elif game_id not in session['added_games']:
-        msg = "You did not add this game"
+        msg = "You can only delete games that you put in"
         return jsonify(msg=msg), 403
 
     max_time = timedelta(minutes=10)
@@ -235,12 +251,13 @@ def delete_game(game_id):
     if not in_date:
         cur.close()
         conn.close()
-        return "Nope, not in_date", 403
+        return "You can only delete games from the last 10 minutes", 403
     else:
         cur.execute(delete_game, (game_id,))
         conn.commit()
         cur.close()
         conn.close()
+        elo.recalculate_scores();
         session['added_games'].remove(game_id)
         return "Deleted that shit", 200
     
