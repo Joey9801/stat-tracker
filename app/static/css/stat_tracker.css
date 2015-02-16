@@ -305,3 +305,9 @@
     margin-bottom: -55px;
     height: 57px;
 }
+
+.leaderboard .difference {
+    float: right;
+    font-size: 20px;
+    margin-top: 15px;
+}

@@ -3,11 +3,17 @@
 {% block content %}
   <ol class="leaderboard">
     {% for player in playerlist %}
+    
+    {% if loop.index != 1 %}
+    <div class="difference">
+    </div>
+    {% endif %}
+
     <li id={{ player.id }}
         data-score={{ player.score }}
         data-winp={{ player.winp }}
         class="leaderboard-row">
-        #{{loop.index}} {{player.nickname}}
+        <div class="name">#{{loop.index}} {{player.nickname}}</div>
     </li>
     {%endfor%}
   </ol>
@@ -18,5 +24,11 @@
     $('.leaderboard-row').click( function() {
       window.location.href = '/view_player/' + this.id;
     });
+
+    $(".difference").each( function () {
+      var a = $(this).prev().data('score');
+      var b = $(this).next().data('score');
+      $(this).text(-Math.round(a-b))
+    })
   </script>
 {% endblock %}
