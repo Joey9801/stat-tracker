@@ -340,7 +340,7 @@ def view_player(player_id=None):
 
     # truncate
     hist = hist[-5:]
-    example_normal = np.random.normal(size=100)
+    example_normal = np.random.normal(size=100) / 1000.0
     walk = np.cumsum(example_normal) + hist[0]
     hist = np.concat(walk[::-1], hist)
     player['score_history'] = hist
