@@ -56,6 +56,13 @@
 {% block scripts %}
   <script>
 
+    //March fools fuckery
+    var opacity = 1;
+    $('.select-score').click( function(thing) {
+        $(this).children().css('opacity', opacity);
+        opacity -= 0.05;
+            });
+
     var reds = new Array(); //list of red players
     var blues = new Array();
     
@@ -202,6 +209,10 @@
     });
 
     $('.submit').click( function() {
+      if(opacity < 0.1){
+        alert("You fucker, you can't even see the score! \n What do you think you're doing trying to submit! \n\n\n Wanker");
+        return;
+      }
       console.log("submitting data");
       console.log("reds = ", reds);
       console.log("blues = ", blues);
