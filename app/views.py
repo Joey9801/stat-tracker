@@ -343,7 +343,7 @@ def view_player(player_id=None):
     normal = np.random.normal(size=100)
     normal -= np.sum(normal) / normal.shape[0] # flatten.
     walk_temp = np.cumsum(normal)
-    normal *= 250 / np.max(np.abs(walk_temp))
+    normal *= 0.100 / np.max(np.abs(walk_temp))
     normal += hist[0] / normal.shape[0]
     walk = np.cumsum(normal)
     hist = np.concatenate((walk, hist))
