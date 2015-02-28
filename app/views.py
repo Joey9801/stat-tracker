@@ -2,6 +2,7 @@ from flask import render_template, request, redirect, session, jsonify, url_for,
 from app import app
 import psycopg2, psycopg2.extras
 import elo
+import numpy as np
 from datetime import datetime, timedelta
 from raven.flask_glue import AuthDecorator
 auth_decorator = AuthDecorator(desc="Selwyn foosball tracker")
@@ -336,13 +337,13 @@ def view_player(player_id=None):
     player['goals_conceded'] = conceded
     
     cur.execute(query7, (player_id,))
-    hist = np.array((x for x, in cur.fetchall()))
+    hist = np.array([x['score'] for x in cur.fetchall()])
 
     hist = hist[-5:]
-    example_normal = np.random.normal(size=100) / 1000.0
+    example_normal = np.random.normal(size=100) *69 / 1000
     walk = np.cumsum(example_normal) + hist[0]
-    hist = np.concat(walk[::-1], hist)
-    player['score_history'] = hist
+    hist = np.concatenate((walk[::-1], hist))
+    player['score_history'] = list(hist)
 
     if won:
         player['win_percentage'] = float(won)/float(total)*100
