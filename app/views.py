@@ -346,6 +346,7 @@ def view_player(player_id=None):
     normal *= 250 / np.max(np.abs(walk_temp))
     normal += hist[0] / normal.shape[0]
     walk = np.cumsum(normal)
+    hist = np.concatenate((walk, hist))
     player['score_history'] = list(hist)
 
     if won:
