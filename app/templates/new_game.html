@@ -60,7 +60,7 @@
     var opacity = 1;
     $('.select-score').click( function(thing) {
         $(this).children().css('opacity', opacity);
-        opacity -= 0.05;
+        opacity -= 0.03;
             });
 
     var reds = new Array(); //list of red players
@@ -210,7 +210,9 @@
 
     $('.submit').click( function() {
       if(opacity < 0.1){
-        alert("You fucker, you can't even see the score! \n What do you think you're doing trying to submit! \n\n\n Wanker");
+        alert("You fucker, you can't even see the score!\
+                 \nWhat do you think you're even doing trying to submit!\
+                 \n\n\nWanker");
         return;
       }
       console.log("submitting data");
