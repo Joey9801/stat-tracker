@@ -340,9 +340,12 @@ def view_player(player_id=None):
     hist = np.array([x['score'] for x in cur.fetchall()])
 
     hist = hist[-5:]
-    example_normal = np.random.normal(size=100) *69 / 1000
-    walk = np.cumsum(example_normal) + hist[0]
-    hist = np.concatenate((walk[::-1], hist))
+    normal = np.random.normal(size=100)
+    normal -= np.sum(normal) / normal.shape[0] # flatten.
+    walk_temp = np.cumsum(normal)
+    normal *= 250 / np.max(np.abs(walk_temp))
+    normal += hist[0] / normal.shape[0]
+    walk = np.cumsum(normal)
     player['score_history'] = list(hist)
 
     if won:
