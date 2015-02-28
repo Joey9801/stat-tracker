@@ -340,12 +340,9 @@ def view_player(player_id=None):
     hist = np.array([x['score'] for x in cur.fetchall()])
 
     hist = hist[-5:]
-    normal = np.random.normal(size=100)
-    normal -= np.sum(normal) / normal.shape[0] # flatten.
-    walk_temp = np.cumsum(normal)
-    normal *= 0.100 / np.max(np.abs(walk_temp))
-    normal += hist[0] / normal.shape[0]
-    walk = np.cumsum(normal)
+    uniform = np.random.uniform(size=100) * .1
+    uniform += (hist[0] - np.sum(uniform)) / uniform.shape[0] # flatten.
+    walk = np.cumsum(uniform)
     hist = np.concatenate((walk, hist))
     player['score_history'] = list(hist)
 
