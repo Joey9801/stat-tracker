@@ -90,7 +90,17 @@ def update_score(cur, game):
             blues[player] = score
     
     adj_red, adj_blue = skill_update(reds, blues, red_score, blue_score)
-    
+
+    if 16 in reds:
+        random_adj = np.random.random() * -50
+    elif 16 in blues:
+        random_adj = np.random.random() * 50
+    else:
+        random_adj = 0
+
+    adj_red += random_adj
+    adj_blue -= random_adj
+
     cur.execute(query2, (adj_red, tuple(reds)))
     cur.execute(query2, (adj_blue, tuple(blues)))
     cur.execute(query3, (game_id,))
