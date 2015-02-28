@@ -338,7 +338,6 @@ def view_player(player_id=None):
     cur.execute(query7, (player_id,))
     hist = np.array((x for x, in cur.fetchall()))
 
-    # truncate
     hist = hist[-5:]
     example_normal = np.random.normal(size=100) / 1000.0
     walk = np.cumsum(example_normal) + hist[0]
