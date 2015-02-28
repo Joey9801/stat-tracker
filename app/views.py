@@ -155,7 +155,7 @@ def stats_leaderboard():
                 where q1.player_id in 
                     (select distinct gp.player_id from games g
                         join games_players gp on g.id=gp.game_id
-                        where g.timestamp > now() - interval '1 months' )
+                        where g.timestamp > now() - interval '10 days' )
                 order by score desc
             """
 
@@ -269,21 +269,27 @@ def view_player(player_id=None):
     #Total num of games
     query2 = "SELECT COUNT(*) FROM games_players WHERE player_id=%s"
     
+    #Are there any recent games (if not then they are unranked)
+    query3 = "select count(g.timestamp) from games g " \
+                "join games_players gp on g.id = gp.game_id " \
+                "where gp.player_id = %s " \
+                "and g.timestamp > now() - interval '10 days'"
+
     #For calculating rank
-    query3 = "select count(*) from (" \
+    query4 = "select count(*) from (" \
                 "select distinct players.* from games " \
                 "join games_players on (games.id=games_players.game_id) " \
                 "join players on (games_players.player_id=players.id) " \
-                "where games.timestamp > now()- interval '1 months' " \
+                "where games.timestamp > now()- interval '10 days' " \
                 "and players.score > (SELECT score from players WHERE id=%s)" \
                 "order by players.score desc" \
                 ") as temp"
 
     #Total games won
-    query4 = "SELECT COUNT(*) FROM games_players WHERE player_id=%s AND win"
+    query5 = "SELECT COUNT(*) FROM games_players WHERE player_id=%s AND win"
     
     #Goals scored/conceded
-    query5 = "SELECT COALESCE(SUM(red_score), 0)  AS red_goals, " \
+    query6 = "SELECT COALESCE(SUM(red_score), 0)  AS red_goals, " \
              "       COALESCE(SUM(blue_score), 0) AS blue_goals " \
              "FROM games " \
              "JOIN games_players ON games_players.game_id = games.id " \
@@ -291,7 +297,7 @@ def view_player(player_id=None):
              "AND games_players.team = %s"
      
     #Score over time
-    query6 = "SELECT gp.score, g.timestamp FROM games_players gp " \
+    query7 = "SELECT gp.score, g.timestamp FROM games_players gp " \
              "JOIN games g ON gp.game_id = g.id " \
              "WHERE gp.player_id=%s ORDER BY g.timestamp ASC"
     
@@ -306,20 +312,22 @@ def view_player(player_id=None):
     cur.execute(query2, (player_id,))
     player['games_total'] = total = int(cur.fetchone()['count'])
     
-    if total:
-        cur.execute(query3, (player_id,))
+    #A player is only ranked if he has played a recent game
+    cur.execute(query3, (player_id,))
+    if cur.fetchone()['count'] > 0:
+        cur.execute(query4, (player_id,))
         player['rank'] = int(cur.fetchone()['count']) + 1
         player['rank'] = '#' + str(player['rank'])
     else:
         player['rank'] = "Unranked"
 
     
-    cur.execute(query4, (player_id,))
+    cur.execute(query5, (player_id,))
     player['games_won'] = won = int(cur.fetchone()['count'])
 
     scored, conceded = 0, 0
     for team, other_team in (('red', 'blue'), ('blue', 'red')):
-        cur.execute(query5, (player_id, team))
+        cur.execute(query6, (player_id, team))
         r = cur.fetchone()
         scored += r[team + "_goals"]
         conceded += r[other_team + "_goals"]
@@ -327,7 +335,7 @@ def view_player(player_id=None):
     player['goals_scored'] = scored
     player['goals_conceded'] = conceded
     
-    cur.execute(query6, (player_id,))
+    cur.execute(query7, (player_id,))
     player['score_history'] = cur.fetchall()
     
     if won:
