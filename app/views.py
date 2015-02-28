@@ -333,8 +333,8 @@ def view_player(player_id=None):
         scored += r[team + "_goals"]
         conceded += r[other_team + "_goals"]
     
-    player['goals_scored'] = scored
-    player['goals_conceded'] = conceded
+    player['goals_scored'] = str(scored) if np.random.random() > 0.1 else str(round(np.pi, 5))
+    player['goals_conceded'] = str(conceded) if np.random.random() > 0.1 else str(round(np.e, 5))
     
     cur.execute(query7, (player_id,))
     hist = np.array([x['score'] for x in cur.fetchall()])
@@ -352,11 +352,11 @@ def view_player(player_id=None):
         player['win_percentage'] = 0
 
     overlay = np.zeros_like(hist)
-    if len(hist) > 80:
+    if len(hist) > 80 and np.random.choice([True, False], p=[0.3, 0.7]):
         x = np.arange(0, 21)
         y = np.sqrt(100 - (x-10)**2)
         p = np.concatenate((5 * y, 30 * y, 5 * y))
-        start = np.random.randint(0, int(len(hist) - len(p) / 2))
+        start = np.random.randint(0, int( (len(hist) - len(p)) / 2))
         overlay[start:start+len(p)] += p
    
     player['score_overlay'] = list(overlay)

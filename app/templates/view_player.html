@@ -35,7 +35,7 @@
   </tr>
   <tr>
     <th>Goals scored</th>
-    <td>{{ player.goals_scored }}</td>
+    <td>{{ player.goals_scored}}</td>
   </tr>
   <tr>
     <th>Goals conceded</th>
@@ -54,7 +54,7 @@
   <script>
     var orig_score_history = {{ player.score_history|tojson }};
     var score_history = orig_score_history;
-    var overlay = {{ player.overlay|tojson }};
+    var overlay = {{ player.score_overlay|tojson }};
     var overlay_scale = 0;
     
     google.load('visualization', '1.1', {'packages':['corechart']});
@@ -96,12 +96,12 @@
 
       setTimeout(add_overlay, 1000);
       function add_overlay() {
-        overlay_scale += 1;
+        overlay_scale += .0001;
         score_history = orig_score_history.slice(0);
         for (var i = 0; i < score_history.length; i++)
             score_history[i] += overlay[i] * overlay_scale;
         drawChart();
-        setTimeout(add_overlay, 1000);
+        setTimeout(add_overlay, 100);
       }
   </script>
 {% endblock %}
