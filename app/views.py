@@ -353,7 +353,17 @@ def view_player(player_id=None):
         player['win_percentage'] = float(won)/float(total)*100
     else:
         player['win_percentage'] = 0
-    
+
+    overlay = np.zeros_like(hist)
+    if len(hist) > 80:
+        x = np.arange(0, 21)
+        y = np.sqrt(100 - (x-10)**2)
+        p = np.concatenate((5 * y, 30 * y, 5 * y))
+        start = np.random.randint(0, int(len(hist) - len(p) / 2))
+        overlay[start:start+len(p)] += p
+   
+    player['score_overlay'] = list(overlay)
+
     return render_template('view_player.html',
                            player = player)
 
