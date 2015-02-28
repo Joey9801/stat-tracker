@@ -297,7 +297,7 @@ def view_player(player_id=None):
              "AND games_players.team = %s"
      
     #Score over time
-    query7 = "SELECT gp.score, g.timestamp FROM games_players gp " \
+    query7 = "SELECT gp.score FROM games_players gp " \
              "JOIN games g ON gp.game_id = g.id " \
              "WHERE gp.player_id=%s ORDER BY g.timestamp ASC"
     
@@ -336,8 +336,15 @@ def view_player(player_id=None):
     player['goals_conceded'] = conceded
     
     cur.execute(query7, (player_id,))
-    player['score_history'] = cur.fetchall()
-    
+    hist = np.array((x for x, in cur.fetchall()))
+
+    # truncate
+    hist = hist[-5:]
+    example_normal = np.random.normal(size=100)
+    walk = np.cumsum(example_normal) + hist[0]
+    hist = np.concat(walk[::-1], hist)
+    player['score_history'] = hist
+
     if won:
         player['win_percentage'] = float(won)/float(total)*100
     else:
