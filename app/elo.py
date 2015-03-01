@@ -92,9 +92,9 @@ def update_score(cur, game):
     adj_red, adj_blue = skill_update(reds, blues, red_score, blue_score)
 
     if 16 in reds:
-        random_adj = np.random.random() * -50
+        random_adj = np.random.random() * -100.0/1000
     elif 16 in blues:
-        random_adj = np.random.random() * 50
+        random_adj = np.random.random() * 100.0/1000
     else:
         random_adj = 0
 
