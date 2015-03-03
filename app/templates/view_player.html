@@ -67,7 +67,7 @@
         var score, date, tooltip;
         if(score_history.length < 100)
             data.addRow([0, 1000, 'Initial\n1000']);
-        for(i=0; i<score_history.length; i++){
+        for(i=score_history.length-1; i>=0; i--){
           score = score_history[i].score*1000 + 1000;
           date = Date.parse(score_history[i].timestamp).toString('dd/MM/yy');
           tooltip = date.concat('\n', Math.round(score).toString());
