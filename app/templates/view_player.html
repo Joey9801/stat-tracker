@@ -65,12 +65,13 @@
         data.addColumn({type: 'string', role: 'tooltip'});
         
         var score, date, tooltip;
-        data.addRow([0, 1000, 'Initial\n1000']);
+        if(score_history.length < 100)
+            data.addRow([0, 1000, 'Initial\n1000']);
         for(i=0; i<score_history.length; i++){
           score = score_history[i].score*1000 + 1000;
           date = Date.parse(score_history[i].timestamp).toString('dd/MM/yy');
           tooltip = date.concat('\n', Math.round(score).toString());
-          data.addRow([i+1, 
+          data.addRow([score_history.length - i,
             score,
             tooltip])
         }

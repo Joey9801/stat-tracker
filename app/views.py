@@ -299,7 +299,7 @@ def view_player(player_id=None):
     #Score over time
     query7 = "SELECT gp.score, g.timestamp FROM games_players gp " \
              "JOIN games g ON gp.game_id = g.id " \
-             "WHERE gp.player_id=%s ORDER BY g.timestamp ASC"
+             "WHERE gp.player_id=%s ORDER BY g.timestamp DESC LIMIT 100"
     
     conn = psycopg2.connect("dbname=foosball user=flask_foosball")
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
