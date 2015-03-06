@@ -25,10 +25,12 @@
       window.location.href = '/view_player/' + this.id;
     });
 
+    var first = $('li').first().data('score');
+
     $(".difference").each( function () {
-      var a = $(this).prev().data('score');
-      var b = $(this).next().data('score');
-      $(this).text(-Math.round(a-b))
+      var score = $(this).next().data('score');
+      var diff  = -Math.round(first - score);
+      $(this).text(diff)
     })
   </script>
 {% endblock %}
