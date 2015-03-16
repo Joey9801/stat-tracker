@@ -6,6 +6,7 @@ app.config.from_object('config')
 
 db = SQLAlchemy(app)
 
-from .api import game, player
+from .api import game, player, stats
 app.register_blueprint(game.game, url_prefix='/api/game')
 app.register_blueprint(player.player, url_prefix='/api/player')
+app.register_blueprint(stats.stats, url_prefix='/api/stats')

@@ -1,5 +1,7 @@
-from flask.ext.sqlalchemy import SQLAlchemy
 from datetime import datetime
+
+from flask.ext.sqlalchemy import SQLAlchemy
+from sqlalchemy.sql import func
 
 from . import db
 
@@ -19,8 +21,13 @@ class GamePlayer(db.Model):
     player = db.relationship('Player', backref='games')
     game   = db.relationship('Game', backref='players')
 
-    def score(self, team):
-        return self.game.score(team)
+    @property
+    def score(self):
+        return self.game.score
+
+    @property
+    def win(self):
+        return self.game.win(self.team)
 
     def toDict(self, which):
         if which=='player':
@@ -39,14 +46,45 @@ class Game(db.Model):
 
     timestamp = db.Column(db.DateTime(timezone=True), nullable=False)
 
-    def score(self, team=None):
-        if team is 'red':
-            return red_score
-        elif team is 'blue':
-            return blue_score
-        else:
-            return {'red_score'  : red_score,
-                    'blue_score' : blue_score}
+    def win(self, team):
+        return team == self.winner
+
+    @property
+    def winner(self):
+        return 'red' if self.red_score > self.blue_score else 'blue';
+
+    @property
+    def score(self):
+        return {'red_score'  : self.red_score,
+                'blue_score' : self.blue_score}
+
+    @staticmethod
+    def sum_score():
+        red = (Game.query
+                .with_entities( func.sum( Game.red_score ) )
+                .first()[0])
+
+        blue = (Game.query
+                .with_entities( func.sum( Game.blue_score ) )
+                .first()[0])
+
+        return {'red'  : red,
+                'blue' : blue}
+
+    @staticmethod
+    def sum_wins():
+        red_wins = (Game.query
+                .with_entities( func.count() )
+                .filter( Game.red_score > Game.blue_score )
+                .first()[0])
+
+        blue_wins = (Game.query
+                .with_entities( func.count() )
+                .filter( Game.blue_score > Game.red_score )
+                .first()[0])
+
+        return {'red'  : red_wins,
+                'blue' : blue_wins}
 
     def __init__(self,
             red_score, red_team,
