@@ -27,21 +27,3 @@ def last_n(n):
     d = {'games': [g.toDict() for g in games] }
     
     return jsonify( d )
-
-@game.route('/last_n/<int:n>/<int:player_id>', methods=['GET'])
-def last_n_by_player(n, player_id):
-
-    #Prevent pulling whole table
-    if n > 20:
-        abort(403)
-
-    games = (Game.query
-            .join(Game.players)
-            .filter( GamePlayer.player_id == player_id )
-            .order_by( Game.timestamp.desc() )
-            .limit(n)
-            )
-    
-    d = {'games': [g.toDict() for g in games] }
-    
-    return jsonify( d )
