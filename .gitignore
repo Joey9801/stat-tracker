@@ -1,5 +1,5 @@
 *.pyc
-env/*
+backend/env/*
 *.ignore
 *.jpg
 *.jpeg
