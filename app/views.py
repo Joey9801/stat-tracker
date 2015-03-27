@@ -155,7 +155,7 @@ def stats_leaderboard():
                 where q1.player_id in 
                     (select distinct gp.player_id from games g
                         join games_players gp on g.id=gp.game_id
-                        where g.timestamp > now() - interval '10 days' )
+                        where g.timestamp > TIMESTAMP '2015-03-19' - interval '10 days' )
                 order by score desc
             """
 
@@ -273,14 +273,14 @@ def view_player(player_id=None):
     query3 = "select count(g.timestamp) from games g " \
                 "join games_players gp on g.id = gp.game_id " \
                 "where gp.player_id = %s " \
-                "and g.timestamp > now() - interval '10 days'"
+                "and g.timestamp > TIMESTAMP '2015-03-19' - interval '10 days'"
 
     #For calculating rank
     query4 = "select count(*) from (" \
                 "select distinct players.* from games " \
                 "join games_players on (games.id=games_players.game_id) " \
                 "join players on (games_players.player_id=players.id) " \
-                "where games.timestamp > now()- interval '10 days' " \
+                "where games.timestamp > TIMESTAMP '2015-03-19'- interval '10 days' " \
                 "and players.score > (SELECT score from players WHERE id=%s)" \
                 "order by players.score desc" \
                 ") as temp"
