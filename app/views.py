@@ -10,6 +10,20 @@ app.before_request(auth_decorator.before_request)
 #crsids authed for adding a new game
 authed_crsids = {'jr592', 'djr61', 'jmc227', 'tp357', 'hndw2', 'cfc46'}
 
+# Make datetimes Javascript friendly. Flask's default seems to break
+# sporadically.
+import flask.json
+
+class JSONEncoder(flask.json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, datetime):
+            return o.isoformat("T")
+        else:
+            return super(JSONEncoder, self).default(o)
+
+app.json_encoder = JSONEncoder
+
+
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404
