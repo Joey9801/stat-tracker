@@ -69,7 +69,7 @@
             data.addRow([0, 1000, 'Initial\n1000']);
         for(i=score_history.length-1; i>=0; i--){
           score = score_history[i].score*1000 + 1000;
-          date = Date.parse(score_history[i].timestamp).toString('dd/MM/yy');
+          date = (new Date(score_history[i].timestamp)).toString('dd/MM/yy');
           tooltip = date.concat('\n', Math.round(score).toString());
           data.addRow([score_history.length - i,
             score,
