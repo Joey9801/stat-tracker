@@ -73,34 +73,16 @@ where
     \varphi &= \sqrt{ \sigma^2 \left( \frac{1}{|I|} + \frac{1}{|J|} \right) }
 \end{align*}
 
-Suppose now that the actual scores were $a$ and $b$; crucially $a + b$ points were played.
+We reward team $I$ with $(1 - E)m$ points every time they score (and take the same amount from team $J$; $Em$ points change hands when team $J$ scores (where $m$ is some magic constant).
 
-We {\it expected} the scores be binomially distributed: $A\sim\operatorname{Bin}(a + b, E)$; $B = a + b - A$.
-
-Note that the expected scores could be greater than 10. Indeed, if a very good team played a very bad team, yet only won 10-9, while in some sense we could say that we ``expected'' 10-1, it makes more sense to say that we expected 19 goals to 1.
-
-The update will be proportional to $1 - \text{p-value}$, where $\text{p-value}$ is the probability of a equally or more significant result occuring. We're using the two-tailed version. This means that if someone does not beat someone by as much as they should, their ratings go down despite them having won. This also means that results that are exactly as expected produce no change in skills.
-\[
-    \Delta = \frac{1}{2} - \sum_{m \in M} {a + b \choose m} E^m (1 - E)^{a + b - m}
-    \text{,}
-\]
-where
-\[
-    M = \begin{cases}
-        \{ a, a + 1, \ldots, a + b \}  &\text{if } a > b \\
-        \{ a, a - 1, \ldots, 0 \}      &\text{if } b > a
-    \end{cases}
-    \text{.}
-\]
-
-The score updates are
+So if the score were $a$ (team $I$) : $b$ (team J), the score updates would be
 \begin{align*}
-    s_i &\leftarrow s_i + k \Delta && \text{each } i \in I \\
-    s_i &\leftarrow s_i - k \Delta && \text{each } j \in J
+    s_i &\leftarrow s_i + ((1-E)a - Eb)m && \text{each } i \in I \\
+    s_i &\leftarrow s_i + (Eb - (1-E)a)m && \text{each } j \in J
     \text{.}
 \end{align*}
-where $k$ is some magic constant.
 
+Because $(1-E)a - Eb = a - (a + b)E$, you can alternatively, and equivalently, think of this as ``update is proportional to difference between actual, and expected score'' (if score is $a$:$b$, $a + b$ points were played, and we expected $I$ to win $(a+b)E$ of them).
 
 Oh, and as a bit of fun, we can also ``predict'' scores:
 

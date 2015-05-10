@@ -1,7 +1,7 @@
 from __future__ import division
 
 import numpy as np
-from scipy.stats import binom, norm
+from scipy.stats import norm
 import psycopg2, psycopg2.extras
 
 # Handicaps for different team sizes
@@ -9,7 +9,7 @@ magic_K = [None, -0.6, 0, 0.2, -0.1]  # 1-indexed
 
 # Adjustments will be in [-update_magnitude, update_magnitude]
 # sizes
-update_magnitude = 0.069
+update_magnitude = 0.1
 
 # This should be on the scale of typical differences between skills
 sigma = 1
@@ -44,17 +44,9 @@ def skill_update(reds, blues, red_score, blue_score):
 
     E = _point_win_probability(reds, blues)
 
-    points = red_score + blue_score
-
-    if red_score > blue_score:
-        delta = 0.5 - binom.sf(red_score - 1, points, E)
-        s_red, s_blue = 1, -1
-    else:
-        delta = 0.5 - binom.cdf(red_score, points, E)
-        s_red, s_blue = -1, 1
-
-    m = 2 * update_magnitude * delta
-    return m * s_red, m * s_blue
+    delta = (red_score * (1 - E) - blue_score * E)       \
+                * 0.1 * update_magnitude
+    return delta, -delta
 
 def predict_score(reds, blues, points=10):
     """
