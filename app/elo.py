@@ -7,14 +7,10 @@ import psycopg2, psycopg2.extras
 # Handicaps for different team sizes
 magic_K = [None, -0.6, 0, 0.2, -0.1]  # 1-indexed
 
-# Adjustments will be in [-update_magnitude, update_magnitude]
-# sizes
-update_magnitude = 0.1
-
 # This should be on the scale of typical differences between skills
 sigma = 1
 
-def _point_win_probability(reds, blues):
+def _tau_phi(reds, blues):
     """Probability that the red team wins a certain point"""
 
     assert set(reds.keys()) & set(blues.keys()) == set()
@@ -27,8 +23,13 @@ def _point_win_probability(reds, blues):
     K_J = magic_K[len(blues)]
     tau = sum(reds.values()) / absI - sum(blues.values()) / absJ + K_I - K_J
     phi = sigma * np.sqrt( 1 / absI + 1 / absJ )
-    E = norm.cdf( tau / phi )
-    return E
+    return tau, phi
+
+def _pwp_tauphi(tau, phi):
+    return norm.cdf( tau / phi )
+
+def _point_win_probability(reds, blues):
+    return _pwp_tauphi(*_tau_phi(reds, blues))
 
 def skill_update(reds, blues, red_score, blue_score):
     """
@@ -42,10 +43,39 @@ def skill_update(reds, blues, red_score, blue_score):
     assert red_score + blue_score > 0
     assert red_score != blue_score
 
-    E = _point_win_probability(reds, blues)
+    print "Score", red_score, ":", blue_score
+    print "Red:", reds
+    print "Blue:", blues
+    print "Point-win-probability", _point_win_probability(reds, blues)
+    print "Prediction", predict_score(reds, blues)
 
-    delta = (red_score * (1 - E) - blue_score * E)       \
-                * 0.1 * update_magnitude
+    tau, phi = _tau_phi(reds, blues)
+    E = _pwp_tauphi(tau, phi)
+    observed_E = red_score / (red_score + blue_score)
+    # since E \in (0, 1), target_E \in (0, 1) and so the PPF
+    # will hopefully not be +/- inf  :-)
+    target_E = 0.8 * E + 0.2 * observed_E
+
+    print "observed P-W-P", observed_E
+    print "target P-W-P", target_E
+
+    x = norm.ppf(target_E)
+    delta = (x * phi - tau) * 0.5
+
+    print "delta reqd", delta
+
+    tr = {k: v + delta for k, v in reds.items()}
+    tb = {k: v - delta for k, v in blues.items()}
+
+    print "Suppose we applied the delta:"
+    print "    reds", tr
+    print "    blues", tb
+    print "    P-W-P", _point_win_probability(tr, tb)
+    print "    Prediction", predict_score(tr, tb)
+
+    print "Applying delta", delta, int(delta * 1000)
+    print
+
     return delta, -delta
 
 def predict_score(reds, blues, points=10):
