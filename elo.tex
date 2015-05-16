@@ -22,8 +22,8 @@ Then, the probability that player 1 wins is the probability that their performan
 \begin{align*}
     E_1 &= P(X_1 > X_2) = P \left( \underbrace{ \frac{1}{\sigma} \left( X_1 - X_2 - (s_1 - s_2) \right) }_{\mathclap{\sim N(0, 1)}}
                         > - \frac{1}{\sigma} (s_1 - s_2) \right)
-         = \varphi\left( \frac{s_2 - s_1}{\sigma} \right) \\
-    E_2 &= P(X_2 > X_1) = \varphi\left( \frac{s_1 - s_2}{\sigma} \right) = 1 - E_1
+         = \Phi\left( \frac{s_2 - s_1}{\sigma} \right) \\
+    E_2 &= P(X_2 > X_1) = \Phi\left( \frac{s_1 - s_2}{\sigma} \right) = 1 - E_1
     \text{,}
 \end{align*}
 and then (supposing player 1 wins) skills are updated:
@@ -65,7 +65,7 @@ So, the probability that team $I$ wins any point is:
 \[
     E = P( X_I > X_J ) = P\left( \underbrace{ \frac{1}{\varphi} ( X_I - X_J - \tau ) }_{\sim N(0, 1)}
                                  > \frac{-\tau}{\varphi} \right)
-                       = \varphi\left( \frac{\tau}{\varphi} \right)
+                       = \Phi\left( \frac{\tau}{\varphi} \right)
 \]
 where
 \begin{align*}
