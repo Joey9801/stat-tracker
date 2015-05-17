@@ -155,25 +155,19 @@ def stats_leaderboard():
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     
     query = """
-            with q1 as 
-                (select player_id, count(*) as played from games_players group by player_id),
-            q2 as 
-                (select player_id, count(*) as won from games_players where win group by player_id)
-            select p.nickname, p.id, 
-                round( (p.score*1000+1000)::numeric, 1 ) as score,
-                round( (q2.won*100/q1.played::float)::numeric, 3 ) as "winp",
-                q1.played as "Games played"
-            from q1 
-                join q2 on q1.player_id=q2.player_id
-                join players p on p.id=q2.player_id
-                where q1.player_id in 
-                    (select distinct gp.player_id from games g
-                        join games_players gp on g.id=gp.game_id
-                        where g.timestamp > now() - interval '10 days' )
-                order by score desc
+            SELECT
+                p.nickname, p.id,
+                round( (p.score*1000+1000)::numeric, 1 ) AS score,
+                round( (count(CASE win WHEN true THEN 1 ELSE NULL END)*100/count(*)::float)::numeric, 3 ) as "winp",
+                count(*) as "Games played"
+            FROM players AS p
+            JOIN games_players gp ON p.id=gp.player_id
+            JOIN games g ON gp.game_id = g.id
+            GROUP BY p.nickname, p.id
+            HAVING max(g.timestamp) > current_timestamp - '10 days'::interval
+            ORDER BY score DESC;
             """
 
-    #cur.execute("SELECT id, nickname FROM players WHERE score !=0 ORDER BY score DESC")
     cur.execute(query)
     playerlist = cur.fetchall()
     
