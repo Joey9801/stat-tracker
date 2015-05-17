@@ -43,12 +43,6 @@ def skill_update(reds, blues, red_score, blue_score):
     assert red_score + blue_score > 0
     assert red_score != blue_score
 
-    print "Score", red_score, ":", blue_score
-    print "Red:", reds
-    print "Blue:", blues
-    print "Point-win-probability", _point_win_probability(reds, blues)
-    print "Prediction", predict_score(reds, blues)
-
     tau, phi = _tau_phi(reds, blues)
     E = _pwp_tauphi(tau, phi)
     observed_E = red_score / (red_score + blue_score)
@@ -56,25 +50,8 @@ def skill_update(reds, blues, red_score, blue_score):
     # will hopefully not be +/- inf  :-)
     target_E = 0.8 * E + 0.2 * observed_E
 
-    print "observed P-W-P", observed_E
-    print "target P-W-P", target_E
-
     x = norm.ppf(target_E)
     delta = (x * phi - tau) * 0.5
-
-    print "delta reqd", delta
-
-    tr = {k: v + delta for k, v in reds.items()}
-    tb = {k: v - delta for k, v in blues.items()}
-
-    print "Suppose we applied the delta:"
-    print "    reds", tr
-    print "    blues", tb
-    print "    P-W-P", _point_win_probability(tr, tb)
-    print "    Prediction", predict_score(tr, tb)
-
-    print "Applying delta", delta, int(delta * 1000)
-    print
 
     return delta, -delta
 
