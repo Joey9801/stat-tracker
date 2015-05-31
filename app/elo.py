@@ -4,6 +4,8 @@ import numpy as np
 from scipy.stats import norm
 import psycopg2, psycopg2.extras
 
+from . import config
+
 # Handicaps for different team sizes
 magic_K = [None, -0.6, 0, 0.2, -0.1]  # 1-indexed
 
@@ -42,6 +44,9 @@ def skill_update(reds, blues, red_score, blue_score):
     assert red_score >= 0 and blue_score >= 0
     assert red_score + blue_score > 0
     assert red_score != blue_score
+
+    if config.no_points_condition(reds, blues):
+        return 0., 0.
 
     tau, phi = _tau_phi(reds, blues)
     E = _pwp_tauphi(tau, phi)
