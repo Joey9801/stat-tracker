@@ -31,6 +31,9 @@ def _pwp_tauphi(tau, phi):
 def _point_win_probability(reds, blues):
     return _pwp_tauphi(*_tau_phi(reds, blues))
 
+def no_points_condition(reds, blues):
+    return (4 in reds or 4 in blues)
+
 def skill_update(reds, blues, red_score, blue_score):
     """
     reds, blues should be dictionaries mapping player_id to current
@@ -42,6 +45,9 @@ def skill_update(reds, blues, red_score, blue_score):
     assert red_score >= 0 and blue_score >= 0
     assert red_score + blue_score > 0
     assert red_score != blue_score
+
+    if no_points_condition(reds, blues):
+        return 0., 0.
 
     tau, phi = _tau_phi(reds, blues)
     E = _pwp_tauphi(tau, phi)
