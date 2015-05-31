@@ -2,13 +2,11 @@ from flask import render_template, request, redirect, session, jsonify, url_for,
 from app import app
 import psycopg2, psycopg2.extras
 import elo
+from . import elo, config
 from datetime import datetime, timedelta
 from raven.flask_glue import AuthDecorator
 auth_decorator = AuthDecorator(desc="Selwyn foosball tracker")
 app.before_request(auth_decorator.before_request)
-
-#crsids authed for adding a new game
-authed_crsids = {'jr592', 'djr61', 'jmc227', 'tp357', 'hndw2', 'cfc46'}
 
 # Make datetimes Javascript friendly. Flask's default seems to break
 # sporadically.
@@ -49,7 +47,7 @@ def new_game():
                                playerlist=playerlist)
                                
     elif request.method == 'POST':
-        if auth_decorator.principal in authed_crsids:
+        if auth_decorator.principal in config.authed_crsids:
             pass
         else:
             return jsonify(valid=False,
@@ -161,6 +159,7 @@ def stats_leaderboard():
                 round( (count(CASE win WHEN true THEN 1 ELSE NULL END)*100/count(*)::float)::numeric, 3 ) as "winp",
                 count(*) as "Games played"
             FROM players AS p
+            WHERE p.id NOT IN %s
             JOIN games_players gp ON p.id=gp.player_id
             JOIN games g ON gp.game_id = g.id
             GROUP BY p.nickname, p.id
@@ -168,7 +167,7 @@ def stats_leaderboard():
             ORDER BY score DESC;
             """
 
-    cur.execute(query)
+    cur.execute(query, (config.leaderboard_hide, ))
     playerlist = cur.fetchall()
     
     cur.close()
@@ -209,8 +208,6 @@ def stats_humiliation():
 def view_game(game_id):
     
     name_query = "SELECT players.nickname, players.id FROM games_players INNER JOIN players ON players.id=games_players.player_id WHERE game_id=%s AND team=%s"
-    
-    class game: pass
     
     conn = psycopg2.connect("dbname=foosball user=flask_foosball")
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -290,6 +287,7 @@ def view_player(player_id=None):
                 "join players on (games_players.player_id=players.id) " \
                 "where games.timestamp > now()- interval '10 days' " \
                 "and players.score > (SELECT score from players WHERE id=%s)" \
+                "and players.id NOT IN %s " \
                 "order by players.score desc" \
                 ") as temp"
 
@@ -322,8 +320,8 @@ def view_player(player_id=None):
     
     #A player is only ranked if he has played a recent game
     cur.execute(query3, (player_id,))
-    if cur.fetchone()['count'] > 0:
-        cur.execute(query4, (player_id,))
+    if cur.fetchone()['count'] > 0 and player['id'] not in config.leaderboard_hide:
+        cur.execute(query4, (player_id, config.leaderboard_hide))
         player['rank'] = int(cur.fetchone()['count']) + 1
         player['rank'] = '#' + str(player['rank'])
     else:
