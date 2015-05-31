@@ -159,15 +159,15 @@ def stats_leaderboard():
                 round( (count(CASE win WHEN true THEN 1 ELSE NULL END)*100/count(*)::float)::numeric, 3 ) as "winp",
                 count(*) as "Games played"
             FROM players AS p
-            WHERE p.id NOT IN %s
             JOIN games_players gp ON p.id=gp.player_id
             JOIN games g ON gp.game_id = g.id
+            WHERE p.id NOT IN %s
             GROUP BY p.nickname, p.id
             HAVING max(g.timestamp) > current_timestamp - '10 days'::interval
             ORDER BY score DESC;
             """
 
-    cur.execute(query, (config.leaderboard_hide, ))
+    cur.execute(query, (tuple(config.leaderboard_hide), ))
     playerlist = cur.fetchall()
     
     cur.close()
@@ -321,7 +321,7 @@ def view_player(player_id=None):
     #A player is only ranked if he has played a recent game
     cur.execute(query3, (player_id,))
     if cur.fetchone()['count'] > 0 and player['id'] not in config.leaderboard_hide:
-        cur.execute(query4, (player_id, config.leaderboard_hide))
+        cur.execute(query4, (player_id, tuple(config.leaderboard_hide)))
         player['rank'] = int(cur.fetchone()['count']) + 1
         player['rank'] = '#' + str(player['rank'])
     else:
