@@ -163,7 +163,7 @@ def stats_leaderboard():
             JOIN games g ON gp.game_id = g.id
             WHERE p.id NOT IN %s
             GROUP BY p.nickname, p.id
-            HAVING max(g.timestamp) > current_timestamp - '10 days'::interval
+            HAVING max(g.timestamp) > current_timestamp - '1000 days'::interval
             ORDER BY score DESC;
             """
 
@@ -278,14 +278,14 @@ def view_player(player_id=None):
     query3 = "select count(g.timestamp) from games g " \
                 "join games_players gp on g.id = gp.game_id " \
                 "where gp.player_id = %s " \
-                "and g.timestamp > now() - interval '10 days'"
+                "and g.timestamp > now() - interval '1000 days'"
 
     #For calculating rank
     query4 = "select count(*) from (" \
                 "select distinct players.* from games " \
                 "join games_players on (games.id=games_players.game_id) " \
                 "join players on (games_players.player_id=players.id) " \
-                "where games.timestamp > now()- interval '10 days' " \
+                "where games.timestamp > now()- interval '1000 days' " \
                 "and players.score > (SELECT score from players WHERE id=%s)" \
                 "and players.id NOT IN %s " \
                 "order by players.score desc" \
